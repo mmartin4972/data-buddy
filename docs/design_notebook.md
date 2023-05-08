@@ -88,5 +88,26 @@ ChatGPT Database Memory ranking (high uses a lot of memory)
 7.	LMDB: LMDB is a memory-mapped key-value store, which means the operating system manages memory usage. It maps the entire database file to memory but doesn't load it all at once. Instead, it loads pages on-demand, resulting in lower memory usage compared to some other databases.
 I am going to use RocksDB, since my projected use case is that you have the data stored on your local SSD or external SSD and it seems optimized for data storage on an SSD.
 
-Motivation: Develop a local application that provides a consistent interface to data collection plugins and data analysis and machine learning plugins
+5/8/2023
+
+## Motivation:
+ Develop a local application that provides a consistent interface to data collection plugins and data analysis and machine learning plugins
+
+## Features:
+- open source so that people are able to trust the management system and the plugins
+- incredible documentation so that it is easy for people to set things up and understand the project organization
+- clearly defined interfaces
+- simple so that it is easy for people to understand
+- be able to very easily import as a library with a very basic interface on a wide variety of computer programs and applications
+- backup and primary storage location
+- databases grow seperately and then be merged together or synced together
+- mobile application
+
+## Security Features:
+- plugins are only able to edit certain data segments
+    - for starters probably best to say that anyone can write anything, but no one can delete
+
+## Plan:
+- Implement a very base level of the system
+- Use it on the grocery application
 
