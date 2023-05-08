@@ -102,6 +102,11 @@ I am going to use RocksDB, since my projected use case is that you have the data
 - backup and primary storage location
 - databases grow seperately and then be merged together or synced together
 - mobile application
+- Could potentially support multiple database types based on nature of how information is being written and queried across them, and then provide a cross database interface for all of them
+- Can have storage frequency limitations. Less frequently data is written the more storage allowed or something like this.
+- Archive ability to offload collected data onto external source
+- Can have different interface for different interprocess communication systems if you would like to speed up the database read and write time
+- Have a feature for importing different data categories?
 
 ## Security Features:
 - plugins are only able to edit certain data segments
@@ -110,4 +115,91 @@ I am going to use RocksDB, since my projected use case is that you have the data
 ## Plan:
 - Implement a very base level of the system
 - Use it on the grocery application
+
+## Interface:
+- import library
+- register_client(name, password) -> app
+    - password makes actually no sense if you want it to just be a wrapper and not a service or anything
+- create_group(category, name, array of inputs that are keyed by) -> group
+    - Can really build this out to take in certain data types and how the prefix filter should treat each of these and if it even needs a prefix filter
+- group.put(array of inputs keyed by, value)
+- group.get(array of inputs keyed by)
+    - Will need to have special considerations here for ranges and such things
+- list_categories()
+- list_clients()
+- open_harmonizer(path)
+- create_harmonizer(path)
+
+## Future Interface:
+- enriched to allow for database configuration
+- allows for creation of multiple databases and configuring the database location
+- can support merging of multiple instances
+
+## RockDB Notes:
+- Source: https://github.com/facebook/rocksdb/wiki/RocksDB-Overview 
+- Basic Interface:
+    - Get(key)
+    - NewIterator()
+    - Put(key, val)
+    - Delete(key, val)
+    - SingleDete(key)
+- Writes are put into the memtable and may be written to the log if they aren't able to just be immediately written to the disk
+- Column Families:
+    - https://github.com/facebook/rocksdb/wiki/Column-Families
+    - patitions a database
+    - guarantees consistent view across column families
+    - supports cross family operations
+    - mechanism for grouping data, just as how data is grouped into tables in a relational database
+    - each key value associated with exactly 1 column family
+    - 
+- All data is stored in sorted order
+- Supports transactions and has different modes for optimistic and pessimistic transactions
+- Can scan through key values, based on a specific prefix given to the key and can do this quite efficiently
+- Different compaction styles
+- Can delete whole datafiles
+- Has read only mode
+- Has a Time to Live feature allowing data to expire
+- Uses a LRU cache, but can also switch this to a clock cache for block eviction
+    - A LRU cache approximates a LFU cache, so the thing that is used least recently is evicted
+- Can index into the database keys by using the key prefix system, but overall they have no way of providing true support for columns as a relational database would
+- Can work around this limitation by saying that each application has at least one column family, all keys are prefixed with date-time, and then the category of information is going to determine the structure of the key and the value. Consequently, the column family is going to specify the source.
+- Example Categories:
+    - Financial Transactions
+        - key = time,name : value = json {price, anything else}
+    - Location
+        - key = time : value = json {location, anything else}
+    - Contact
+        - key = time,entity name : value = json {contact info, anything else}
+    - Calendar
+        - key = time,name : value = json {event info, anything else}
+    - Message
+        - key = time,type,sender,name : value = json {message, message info, anything else}
+    - Browser History
+        - key = time : value = json
+    - Usage History
+        - key = start time, name : value = json {end time}
+
+- Idea is that my abstraction provides a uniform and a safe place to store a multitude of largely unrelated data. If people want the data arranged in a different manner, or configured differently so that it is easier to query, then they can read it out and reformat the data
+- This system depends in large part on the keyed seek of RockDB. I need to learn more about this.
+- Key-Prefix Iterators
+    - https://github.com/facebook/rocksdb/wiki/Prefix-Seek 
+    - Seems like you can create a bloom filter for a specific part of a key and then filter out everything that is not included into this bloom filter
+    - This post makes it seem like such a system is possible: https://stackoverflow.com/questions/73670453/rocksdb-range-query-on-numbers
+
+Definitions:
+- Group : RocksDB column family. All groups have a category, an app, and a name. Stores info from the specified app in this category in the group with this name
+- Client: producer or consumer interfacing with the info harmonizer 
+
+info harmonizer is going to run as a service. It is going to use interprocess communication systems such as pipes, shared memory, and sockets to communicate with web extensions, python apps, and C++ apps. It needs to be a system service so that it can manage concurrent reads and writes as well as securely manage permissions for various plugins. We don't want arbitrary plugins just being able to read and manipulate this precious treasure trove of personal user information.
+
+Default Groups:
+- Plugin Column Family
+    - key = name : value = {password, list of column families (groups) accessible by plugin}
+- Category Column Family
+    - key = category : value = {list of all column families (groups) that belong to this category}
+
+TODO:
+- Develop a C++ service on windows which uses RocksDB to store information and has a socket based interface for other processes to interface with it.
+- Consider changing the name to data buddy. Your own personal data manager.
+
 
