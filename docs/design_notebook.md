@@ -107,6 +107,7 @@ I am going to use RocksDB, since my projected use case is that you have the data
 - Archive ability to offload collected data onto external source
 - Can have different interface for different interprocess communication systems if you would like to speed up the database read and write time
 - Have a feature for importing different data categories?
+- You can have a personal database store and an impersonal big data store that can be housed in two different locations. Impersonal big data store may just be data which was scraped from a site that you got access too after getting through their login wall. e.g. personal would be your linked in friends, impersonal would be all linkedIn members from an organization you are a part of. Because you are part of this organization you can see all these members, but this information is not necessarily specific to you.
 
 ## Security Features:
 - plugins are only able to edit certain data segments
@@ -118,17 +119,17 @@ I am going to use RocksDB, since my projected use case is that you have the data
 
 ## Interface:
 - import library
-- register_client(name, password) -> app
+- [POST] register_client(name, password) -> app
     - password makes actually no sense if you want it to just be a wrapper and not a service or anything
-- create_group(category, name, array of inputs that are keyed by) -> group
+- [POST] create_group(category, name, array of inputs that are keyed by) -> group
     - Can really build this out to take in certain data types and how the prefix filter should treat each of these and if it even needs a prefix filter
-- group.put(array of inputs keyed by, value)
-- group.get(array of inputs keyed by)
+- [POST] group.put(array of inputs keyed by, value)
+- [GET] group.get(array of inputs keyed by)
     - Will need to have special considerations here for ranges and such things
-- list_categories()
-- list_clients()
-- open_harmonizer(path)
-- create_harmonizer(path)
+- [GET] list_categories()
+- [GET] list_clients()
+- [POST] connect_buddy(path)
+- [POST] create_buddy(path)
 
 ## Future Interface:
 - enriched to allow for database configuration
@@ -202,4 +203,62 @@ TODO:
 - Develop a C++ service on windows which uses RocksDB to store information and has a socket based interface for other processes to interface with it.
 - Consider changing the name to data buddy. Your own personal data manager.
 
+- ChatGPT recommends that I use boost.asio for my C++ server, and I have used Boost in the past and though it is large it has very nice functions, so I think it is an acceptable choice for this project.
+
+5/10/23
+- Boost.Asio Install
+    - wget https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.gz
+    - tar -xzvf boost_1_82_0.tar.gz
+    - cd boost*
+    - `./bootstrap.sh --prefix=/usr/local`
+    - `./b2`
+    - `./b2 install`
+- To Link Boost.Asio
+    - `-L/usr/local/lib -lboost_system`
+- RocksDB Install
+    - `apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev`
+    - git clone https://github.com/facebook/rocksdb.git
+    - `cd rocksdb`
+    - `make shared_lib`
+    - Only include files that are found in the include/ directory
+    - This takes several hours to install
+    - Can Compile Examples with:
+        - `make static_lib`
+        - `cd examples/; make all`
+- To Link RocksDB
+    - Make sure librocksDB is in the library path: `export LD_LIBRARY_PATH=/data-buddy/rocksdb:$LD_LIBRARY_PATH`
+    - Compile with the following flags: `-I ../../rocksdb/include -std=c++17 -L/data-buddy/rocksdb -lrocksdb`
+TODO:
+- [ ] Implement the server with the basic interface defined above
+- [ ] Write a python library for interfacing with the server
+- [ ] Implement the RocksDB logic for the server
+
+- Boost Server Notes:
+    - shared_from_this() allows for shared_ptrs to the current class to be made (https://www.boost.org/doc/libs/1_62_0/libs/smart_ptr/enable_shared_from_this.html)
+
+- I have decided to not use Boost.asio just because it is too low level. 
+- ChatGPT and this reddit post both recommend Web Toolkit. It seems modern and up to date and maintained unlike CppCMS.
+    - https://www.reddit.com/r/cpp/comments/4945z3/what_is_the_best_c_webserver_framework/
+- I'm thinking I may want to use an RPC model since this is far closer to what I am actually doing than actually HTTP web development
+
+Installing Web Toolkit
+- `apt-get install gcc g++ libboost-all-dev cmake`
+- `apt-get install doxygen libgraphicsmagick3 libssl-dev libpq-dev libssl-dev libfcgi-dev`
+- `wget -c https://github.com/emweb/wt/archive/4.9.2.tar.gz`
+- `tar -xzv 4.9.2.tar.gz`
+- `cd wt-4.9.2`
+- `mkdir build; cd build`
+- `cmake ..`
+- `make`
+- `make -C examples`
+- `make install`
+- `ldconfig`
+
+Building with Web Toolkit:
+- `g++ -o wt_test -lwt -lwthttp wt_test.cpp`
+5/11/23
+Shopping Scraper:
+- Will scrape Target and Amazon first
+
+- web toolkit seems like it is optimized for developing web appliations. This is not necessarily what I want. I just want a very simple http server. Oat++ seems like they might be a good option, so I am going to try them out.
 

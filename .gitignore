@@ -1,1 +1,6 @@
 docs/~*
+boost_1_82_0/
+rocksdb/
+wt-4.9.2/
+oatpp/
+service/build
