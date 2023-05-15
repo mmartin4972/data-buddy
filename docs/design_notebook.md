@@ -260,6 +260,7 @@ Installing Web Toolkit
 
 Building with Web Toolkit:
 - `g++ -o wt_test -lwt -lwthttp wt_test.cpp`
+
 5/11/23
 Shopping Scraper:
 - Will scrape Target and Amazon first
@@ -273,4 +274,11 @@ Shopping Scraper:
 - dpkg works directly with .deb pacakges and doesn't handle dependency resolution automatically
 - apt sits on top of dpkg and provides a more user friendly automated package management experience and resolves dependencies automatically
 
+5/15/23
+- Compiling the service
+    - `cd service`
+    - `mkdir build`
+    - `cmake ..`
+    - `make all`
+    - `./data-buddy-exe`
 
