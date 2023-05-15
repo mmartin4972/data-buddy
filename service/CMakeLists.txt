@@ -1,55 +1,59 @@
 cmake_minimum_required(VERSION 3.1)
 
 set(project_name data-buddy) ## rename your project here
-
 project(${project_name})
-
 set(CMAKE_CXX_STANDARD 11)
 
+################
+#
+# OatPP Setup
+#
+################
 add_library(${project_name}-lib
         src/AppComponent.hpp
-        src/controller/MyController.cpp
-        src/controller/MyController.hpp
+        src/controller/Controller.cpp
+        src/controller/Controller.hpp
         src/dto/DTOs.hpp
-        src/rocksdb/methods.cpp
 )
-
-## link libs
-
 find_package(oatpp 1.3.0 REQUIRED)
-
 target_link_libraries(${project_name}-lib
         PUBLIC oatpp::oatpp
-        # PUBLIC oatpp::oatpp-test
 )
 
-target_include_directories(${project_name}-lib PUBLIC src)
+#################
+#
+# RocksDB Setup
+#
+#################
+# Set the library's .so file location
+set(RDB_LIBRARY_PATH "/usr/lib/librocksdb.so") # TODO: Make this less janky
 
-## add executables
+# Set the library's include header location
+set(RDB_INCLUDE_PATH "/usr/include/rocksdb") # TODO: Make this less janky
+
+# Add the library's .so file as an external library
+add_library(rocksdb SHARED IMPORTED)
+set_target_properties(rocksdb PROPERTIES IMPORTED_LOCATION ${RDB_LIBRARY_PATH})
+
+
+###############
+#
+# Build Executable
+#
+###############
+
+target_include_directories(${project_name}-lib PUBLIC src ${RDB_INCLUDE_PATH})
 
 add_executable(${project_name}-exe
         src/App.cpp)
-        # test/app/MyApiTestClient.hpp)
-target_link_libraries(${project_name}-exe ${project_name}-lib)
+
+target_link_libraries(${project_name}-exe ${project_name}-lib rocksdb)
+
 add_dependencies(${project_name}-exe ${project_name}-lib)
 
-# add_executable(${project_name}-test
-#         test/tests.cpp
-#         test/app/TestComponent.hpp
-#         test/app/MyApiTestClient.hpp
-#         test/MyControllerTest.cpp
-#         test/MyControllerTest.hpp
-# )
-
-# target_link_libraries(${project_name}-test ${project_name}-lib)
-# add_dependencies(${project_name}-test ${project_name}-lib)
-
-set_target_properties(${project_name}-lib ${project_name}-exe # ${project_name}-test 
+set_target_properties(${project_name}-lib ${project_name}-exe 
         PROPERTIES
-        CXX_STANDARD 11
+        CXX_STANDARD 17
         CXX_EXTENSIONS OFF
         CXX_STANDARD_REQUIRED ON
 )
-
-# enable_testing()
-# add_test(project-tests ${project_name}-test)

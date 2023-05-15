@@ -225,6 +225,10 @@ TODO:
     - Can Compile Examples with:
         - `make static_lib`
         - `cd examples/; make all`
+    - The far easier and better way to do this
+        - `apt-get install librocksdb-dev`
+    - To find the .so file location and include directory location run:
+        - dpkg -L librocksdb-dev | grep cmake
 - To Link RocksDB
     - Make sure librocksDB is in the library path: `export LD_LIBRARY_PATH=/data-buddy/rocksdb:$LD_LIBRARY_PATH`
     - Compile with the following flags: `-I ../../rocksdb/include -std=c++17 -L/data-buddy/rocksdb -lrocksdb`
@@ -261,4 +265,12 @@ Shopping Scraper:
 - Will scrape Target and Amazon first
 
 - web toolkit seems like it is optimized for developing web appliations. This is not necessarily what I want. I just want a very simple http server. Oat++ seems like they might be a good option, so I am going to try them out.
+
+- The files in the service do not follow my traditional snake case naming convention, however, I am going to leave them as they are for now since I want to maintain the connection between my service and the oatpp framework that I am using.
+
+## Dpkg v. Apt
+- Dpkg and Apt are both package managers
+- dpkg works directly with .deb pacakges and doesn't handle dependency resolution automatically
+- apt sits on top of dpkg and provides a more user friendly automated package management experience and resolves dependencies automatically
+
 
