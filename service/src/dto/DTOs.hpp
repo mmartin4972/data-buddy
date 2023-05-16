@@ -14,7 +14,6 @@ class MyDto : public oatpp::DTO {
   
   DTO_INIT(MyDto, DTO)
   
-  DTO_FIELD(Int32, statusCode);
   DTO_FIELD(String, message);
   
 };
