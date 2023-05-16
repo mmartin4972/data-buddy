@@ -124,7 +124,7 @@ I am going to use RocksDB, since my projected use case is that you have the data
 - [POST] create_group(category, name, array of inputs that are keyed by) -> group
     - Can really build this out to take in certain data types and how the prefix filter should treat each of these and if it even needs a prefix filter
 - [POST] group.put(array of inputs keyed by, value)
-- [GET] group.get(array of inputs keyed by)
+- [POST] group.get(array of inputs keyed by)
     - Will need to have special considerations here for ranges and such things
 - [GET] list_categories()
 - [GET] list_clients()
@@ -188,8 +188,9 @@ I am going to use RocksDB, since my projected use case is that you have the data
     - This post makes it seem like such a system is possible: https://stackoverflow.com/questions/73670453/rocksdb-range-query-on-numbers
 
 Definitions:
-- Group : RocksDB column family. All groups have a category, an app, and a name. Stores info from the specified app in this category in the group with this name
-- Client: producer or consumer interfacing with the info harmonizer 
+- Group : RocksDB column family. All groups have a category, an app, and a name. Stores info from the specified app in this category in the group with this name. Have a one to one correspondence with column families
+- Client: producer or consumer interfacing with the info harmonizer
+- Category: specify the type of data stored, which will specify the format of the return information
 
 info harmonizer is going to run as a service. It is going to use interprocess communication systems such as pipes, shared memory, and sockets to communicate with web extensions, python apps, and C++ apps. It needs to be a system service so that it can manage concurrent reads and writes as well as securely manage permissions for various plugins. We don't want arbitrary plugins just being able to read and manipulate this precious treasure trove of personal user information.
 
@@ -281,4 +282,14 @@ Shopping Scraper:
     - `cmake ..`
     - `make all`
     - `./data-buddy-exe`
+
+5/16/23
+- Definitions:
+- Group : RocksDB column family. All groups have a category, a client, and a name. Stores info from the specified app in this category in the group with this name. Have a one to one correspondence with column families
+- Client: producer or consumer interfacing with the info harmonizer
+- Category: specify the type of data stored, which will specify the format of the return information
+
+Connection Pools are a way in which multiple sockets can be reused to enhance performance. I am not worried about such a system at this time however.
+
+There doesn't seem to be a hard and fast rule as to whether you should put parameters in the URI v. in the body of the request. I am going to default to body of request, so if I decide to convert to RPC based system the conversion will be simpler.
 

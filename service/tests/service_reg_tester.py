@@ -53,7 +53,20 @@ try:
     post_response = requests.post('http://localhost:8787/db-get-test', json=data)
     assert(post_response.text == 'a{"key":"bwhat?"}')
 
-
+# Check Get Endpoing
+    data = {
+        "auth_token": "test_token",
+        "group": "test_group",
+        "category": "test_category",
+        "key_params": {
+            "a": "b",
+            "c": "d",
+            "e": "f"
+        }
+    }
+    post_response = requests.post('http://localhost:8787/db-get', json=data)
+    print(post_response.json())
+    
     print ("All tests passed!")
     
 except AssertionError as error:

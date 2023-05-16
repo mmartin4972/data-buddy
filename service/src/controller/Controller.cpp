@@ -39,3 +39,11 @@ int Controller::db_test() {
 
     return 0;
 }
+
+oat_u_map Controller::do_get(oat_d_get_recv recv) {
+    oat_u_map vals;
+    vals["a"] = "b";
+    vals["c"] = "d";
+    vals["e"] = "f";
+    return vals;
+}
