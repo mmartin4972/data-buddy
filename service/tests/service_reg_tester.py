@@ -51,28 +51,28 @@ try:
         "key": "bwhat?"
     }
     post_response = requests.post('http://localhost:8787/db-get-test', json=data)
-    assert(post_response.text == 'a{"key":"bwhat?"}')
+    assert(post_response.text == '{"key":"bwhat?"}')
 
-# Check Get Endpoing
+# Check Get Endpoint
     data = {
         "auth_token": "test_token",
         "group": "test_group",
         "category": "test_category",
-        "key_params": {
+        "key_params": json.dumps({
             "a": "b",
             "c": "d",
             "e": "f"
-        }
+        })
     }
     post_response = requests.post('http://localhost:8787/db-get', json=data)
-    print(post_response.json())
+    print(post_response.text)
     
     print ("All tests passed!")
     
 except AssertionError as error:
-    kill_process_and_children(process.pid)
     print("Failed")
 
 except:
-    kill_process_and_children(process.pid)
     print("Something really went wrong")
+    
+kill_process_and_children(process.pid)

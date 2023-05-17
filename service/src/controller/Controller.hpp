@@ -1,19 +1,17 @@
 #ifndef Controller_hpp
 #define Controller_hpp
 
+#include <iostream>
+#include "Common.hpp"
+
 #include "dto/DTOs.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
 
+
 #include OATPP_CODEGEN_BEGIN(ApiController) //<-- Begin Codegen
-
-// using namespace oatpp::data::mapping::type; // TODO: remove this
-using oat_u_map = oatpp::data::mapping::type::UnorderedMap<oatpp::data::mapping::type::String, oatpp::data::mapping::type::String>;
-using oat_d_get_recv = oatpp::data::mapping::type::DTOWrapper<GetRecvDto>;
-using oat_d_get_resp = oatpp::data::mapping::type::DTOWrapper<GetRespDto>;
-
 
 /**
  * Core logic for handling endpoint requests. Calls into the functions housed in controller.cpp
@@ -28,19 +26,63 @@ public:
     : oatpp::web::server::api::ApiController(objectMapper)
     {}
 
-    /**
-     * 
-     * Helper Functions
-     * 
-     */
-    int db_test();
-    oat_u_map do_get(oat_d_get_recv recv);
+
+
+    ////////////////////////
+    //
+    //  Helper Functions
+    //
+    ////////////////////////
     
     /**
-     * 
-     * End Points
-     * REQUIRES: The data buddy service is running and listening for connections
+     * EFFECTS: creates a test database and writes a key value pair to it
+     * RETURNS: 0
     */
+    int db_test();
+    
+    /**
+     * REQUIRES: string is formatted as json object
+     * RETURNS: dictionary with key value pairs corresponding to the json object
+    */
+    Dictionary string_to_dictionary(String str);
+    
+    /**
+     * RETURNS: string formatted as json object
+    */
+    String dictionary_to_string(Dictionary dict);
+
+    /**
+     * RETURNS: true if the dictionary is valid for the given category, false if not 
+    */
+    bool is_dictionary_valid(Dictionary dict, String category);
+
+
+
+    ////////////////////////
+    //
+    //  Endpoint Functions
+    //
+    ////////////////////////
+
+    /**
+     * @param auth_token: authentication token for the client
+     * @param group: group the key is associated with
+     * @param category: category the key is associated with
+     * @param key_params: params used to construct the key
+     * EFFECTS: returns the value associated with the key
+     * RETURNS: dictionary formatted as string with values corresponding to 
+     *   names of the various category values associated with the key
+    */
+   // TODO: Modify this to include range based gets and such
+    StringVector do_get(String auth_token, String group, String category, Dictionary key_params);
+
+
+
+    ////////////////////////
+    //
+    // Oat++ Endpoint Code
+    //
+    ////////////////////////
 
     ENDPOINT_INFO(root) {
         info->summary = "Test Endpoint 1";
@@ -51,7 +93,6 @@ public:
         dto->message = "Hello World!";
         return createDtoResponse(Status::CODE_200, dto);
     }
-
 
     ENDPOINT_INFO(get_test) {
         info->summary = "Get value for the provided key";
@@ -67,15 +108,6 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
-    /**
-     * @param auth_token: authentication token for the client
-     * @param group: group the key is associated with
-     * @param category: category the key is associated with
-     * @param key: key to get the value for
-     * EFFECTS: returns the value associated with the key
-     * RETURNS: the value associated with the key
-    */
-   // TODO: Modify this to include range based gets and such
     ENDPOINT_INFO(get) {
         info->summary = "Get value for the provided key";
         info->addConsumes<Object<GetRecvDto>>("application/json");
@@ -84,9 +116,12 @@ public:
     ENDPOINT("POST", "/db-get", get,
             BODY_DTO(Object<GetRecvDto>, recv)) {
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
-        oat_u_map vals = do_get(recv);
-        oat_d_get_resp dto = GetRespDto::createShared();
-        // dto->value = vals;
+        std::cerr << "c\n";
+        StringVector values = do_get(recv->auth_token, recv->group, recv->category, string_to_dictionary(recv->key_params));
+        std::cerr << "b\n";
+        auto dto = GetRespDto::createShared();
+        dto->values = values;
+        std::cerr << "a\n";
         return createDtoResponse(Status::CODE_200, dto);
     }
 
@@ -163,9 +198,6 @@ public:
     //  * EFFECTS: connects to an existing data buddy folder freturns true if success and false if fails
     // */
     // ENDPOINT_INFO(connect_buddy) {}
-
-
-  
 };
 
 #include OATPP_CODEGEN_END(ApiController) //<-- End Codegen

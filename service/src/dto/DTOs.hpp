@@ -1,6 +1,8 @@
 #ifndef DTOs_hpp
 #define DTOs_hpp
 
+#include "Common.hpp"
+
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/Types.hpp"
 
@@ -35,14 +37,15 @@ class GetRecvDto : public oatpp::DTO {
   DTO_FIELD(String, auth_token);
   DTO_FIELD(String, group);
   DTO_FIELD(String, category);
-  // JSON object with key_params and key_inputs
+  DTO_FIELD(String, key_params); // JSON object parsed according to category
 };
 
 class GetRespDto : public oatpp::DTO {
   
   DTO_INIT(GetRespDto, DTO);
 
-  DTO_FIELD(String , value);
+//
+  DTO_FIELD(StringVector, values); // JSON object which will be parsed by client
 };
 
 #include OATPP_CODEGEN_END(DTO)

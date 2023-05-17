@@ -40,10 +40,18 @@ int Controller::db_test() {
     return 0;
 }
 
-oat_u_map Controller::do_get(oat_d_get_recv recv) {
-    oat_u_map vals;
-    vals["a"] = "b";
-    vals["c"] = "d";
-    vals["e"] = "f";
-    return vals;
+Dictionary Controller::string_to_dictionary(String str) {
+    return Dictionary();
+}
+
+String Controller::dictionary_to_string(Dictionary dict) {
+    return String("Hello World!");
+}
+
+bool Controller::is_dictionary_valid(Dictionary dict, String category) {
+    return true;
+}
+
+StringVector Controller::do_get(String auth_token, String group, String category, Dictionary key_params) {
+    return {"Hello", "World!"};
 }
