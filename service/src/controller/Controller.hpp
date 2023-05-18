@@ -76,7 +76,12 @@ public:
      * RETURNS: response to be sent to client
      * REQUIRES: dto pointer must contain the error field
     */
-    Response create_response(const oatpp::data::mapping::type::DTOWrapper<RespDto> &dto);
+    Response create_response(const String& error, const oatpp::Void &dto);
+
+    /**
+     * RETURNS: true if data buddy is connected, false otherwise
+    */
+    bool is_buddy_connected();
 
     ////////////////////////
     //
@@ -116,15 +121,24 @@ public:
      * EFFECTS: creates the data buddy folder and stores the path to the folder in folder_path.
      *   Will create a user database to store user data, and an app database to store client info, category info, and group info 
      * RETURNS: empty string if successful, error message if not
+     * REQUIRES: data buddy is not currently connected
     */
     String do_create_buddy(String path, String& folder_path);
 
     /**
      * @param path: absolute path to the location of the data buddy folder
-     * EFFECTS: connects to an existing data buddy folder
+     * EFFECTS: connects to an existing data buddy folder. Will disconnect you from any currently connected data buddy folder regardless if new connection is successful or not
      * RETURNS: empty string if successful, error message if not
+     * REQUIRES: data buddy is not currently connected
     */
     String do_connect_buddy(String path);
+
+    /**
+     * EFFECTS: disconnects from the data buddy folder
+     * RETURNS: empty string if successful, error message if not
+     * REQUIRES: data buddy is currently connected
+    */
+    String do_disconnect_buddy();
 
     /**
      * @param name: name of the client
@@ -273,7 +287,7 @@ public:
         auto dto = CreateBuddyRespDto::createShared();
         dto->error = error;
         dto->folder_path = folder_path;
-        return create_response(dto);
+        return create_response(error, dto);
     }
 
     ENDPOINT_INFO(connect_buddy) {
@@ -292,7 +306,21 @@ public:
         // Respond
         auto dto = ConnectBuddyRespDto::createShared();
         dto->error = error;
-        return create_response(dto);
+        return create_response(error, dto);
+    }
+
+    ENDPOINT_INFO(disconnect_buddy) {
+        info->summary = "Disconnect from the data buddy folder";
+        info->addResponse<Object<DisconnectBuddyRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("GET", "/db-disconnect-buddy", disconnect_buddy) {
+        // Function Call
+        String error = do_disconnect_buddy();
+        
+        // Respond
+        auto dto = DisconnectBuddyRespDto::createShared();
+        dto->error = error;
+        return create_response(error, dto);
     }
 
     ENDPOINT_INFO(create_client) {

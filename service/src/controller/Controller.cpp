@@ -7,7 +7,7 @@
 #include <filesystem>
 
 using json = nlohmann::json;
-using namespace std;
+namespace fs = std::filesystem;
 
 ////////////////////////
 //
@@ -83,9 +83,9 @@ bool Controller::is_successful(String error) {
     return error == "";
 }
 
-Response Controller::create_response(const oatpp::data::mapping::type::DTOWrapper<RespDto> &dto) {
+Response Controller::create_response(const String& error, const oatpp::Void &dto) {
     Response res;
-    if (is_successful(dto->error)) {
+    if (is_successful(error)) {
         res = createDtoResponse(Status::CODE_200, dto);
     } else {
         res = createDtoResponse(Status::CODE_500, dto);
@@ -98,6 +98,10 @@ void open_db_or_error(const rocksdb::Options &options, const std::string &name, 
     if (!status.ok()) {
         throw std::runtime_error(status.ToString());
     }
+}
+
+bool Controller::is_buddy_connected() {
+    return buddy_path.empty() == false;
 }
 
 ////////////////////////
@@ -117,61 +121,96 @@ String Controller::do_put(String auth_token, String group, String category, Dict
 
 // TODO: Security vulnerability in that anyone can read the app data, which should be private
 String Controller::do_create_buddy(String path, String& folder_path) {
-    String error = "";
+    std::string error = "";
     rocksdb::Options options;
     options.create_if_missing = true;
-    filesystem::path p(path);
+    fs::path p(path);
     p.append(DATA_BUDDY_FOLDER);
     try {
+        if (is_buddy_connected()) {
+            throw std::runtime_error("Buddy path is already connected");
+        }
         // Create the folder to house all data buddy files
-        create_directories(p);
+        create_directory(p);
         buddy_path = p;
         folder_path = p.string();
 
         // Create the app database
-        filesystem::path app_path = p;
+        fs::path app_path = p;
         app_path.append(APP_DB);
         open_db_or_error(options, app_path.string(), &app_db);
 
         // Create the user database
-        filesystem::path user_path = p;
-        app_path.append(USER_DB);
+        fs::path user_path = p;
+        user_path.append(USER_DB);
         open_db_or_error(options, user_path.string(), &user_db);
 
-    } catch (const filesystem::filesystem_error& e) {
+    } catch (const fs::filesystem_error& e) {
         error = e.what();
+        error += (std::string)do_disconnect_buddy();
+
     } catch (const std::runtime_error& e) {
         error = e.what();
+        error += (std::string)do_disconnect_buddy();
     }
 
     return error;
 }
 
 String Controller::do_connect_buddy(String path) {
-    string error = "";
+    std::string error = "";
     rocksdb::Options options;
-    buddy_path = filesystem::path(path);
     try {
-        if (!filesystem::exists(buddy_path)) {
+        if (is_buddy_connected()) {
+            throw std::runtime_error("Buddy path is already connected");
+        }
+        if (!fs::exists(fs::path(path))) {
             throw std::runtime_error("Buddy path does not exist");
         }
 
+        // Set up buddy path
+        buddy_path = fs::path(path);
+
         // Open the app database
-        filesystem::path app_path = buddy_path;
+        fs::path app_path = buddy_path;
         app_path.append(APP_DB);
         open_db_or_error(options, app_path.string(), &app_db);
 
         // Open the user database
-        filesystem::path user_path = buddy_path;
+        fs::path user_path = buddy_path;
         user_path.append(USER_DB);
         open_db_or_error(options, user_path.string(), &user_db);
 
-    } catch (const filesystem::filesystem_error& e) {
+    } catch (const fs::filesystem_error& e) {
         error = e.what();
+        error += (std::string)do_disconnect_buddy();
     } catch (const std::runtime_error& e) {
         error = e.what();
+        error += (std::string)do_disconnect_buddy();
     }
 
+    return error;
+}
+
+String Controller::do_disconnect_buddy() {
+    std::string error = "";
+    if (!is_buddy_connected()) {
+        error += "Buddy path is not connected";
+    }
+    buddy_path = fs::path();
+    try {
+        app_db->Close();
+    }
+    catch (const std::runtime_error& e) {
+        error += e.what();
+    }
+
+    try {
+        user_db->Close();
+    }
+    catch (const std::runtime_error& e) {
+        error += e.what();
+    }
     return error;
 }
 

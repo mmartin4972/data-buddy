@@ -15,6 +15,6 @@ using Response = std::shared_ptr<oatpp::web::server::api::ApiController::Outgoin
 
 const std::string DATA_BUDDY_FOLDER = "data_buddy";
 const std::string APP_DB = "app_db";
-const std::string USER_DB = "user_bd";
+const std::string USER_DB = "user_db";
 
 #endif /* Common_hpp */
