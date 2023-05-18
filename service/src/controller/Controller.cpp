@@ -52,6 +52,62 @@ bool Controller::is_dictionary_valid(Dictionary dict, String category) {
     return true;
 }
 
-StringVector Controller::do_get(String auth_token, String group, String category, Dictionary key_params) {
-    return {"Hello", "World!"};
+String Controller::do_get(String auth_token, String group, String category, Dictionary key_params, StringVector& value_params) {
+    return {"Hellow", {"Hello", "World!"}};
 }
+
+String Controller::do_put(String auth_token, String group, String category, Dictionary key_params, Dictionary value_params) {
+    return "";
+}
+
+String do_create_buddy(String path, String& folder_path) {
+    return "";
+}
+
+String do_connect_buddy(String path) {
+    return "";
+}
+
+String do_create_client(String name, String password, String& auth_token) {
+    return "";
+}
+
+String do_connect_client(String name, String password, String& auth_token) {
+    return "";
+}
+
+String do_add_client(String auth_token, String group, String name) {
+    return "";
+}
+
+String do_create_group(String auth_token, String category, String group_name) {
+    return "";
+}
+
+String do_create_category(String name, StringVector key_params, StringVector value_params) {
+    return "";
+}
+
+String do_list_clients() {
+    return "";
+}
+
+String do_list_groups() {
+    return "";
+}
+
+String do_list_categories() {
+    return "";
+}
+
+
+
+
+
+
+
+
+
+
+
+
