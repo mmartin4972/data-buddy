@@ -2,9 +2,12 @@
 #define Controller_hpp
 
 #include <iostream>
-#include "Common.hpp"
+#include <filesystem>
 
+#include "Common.hpp"
 #include "dto/DTOs.hpp"
+
+#include "rocksdb/db.h"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
@@ -19,7 +22,7 @@
 class Controller : public oatpp::web::server::api::ApiController {
 private:
 
-    filesystem::path buddy_path; // path to the data buddy folder
+    std::filesystem::path buddy_path; // path to the data buddy folder
     rocksdb::DB* app_db; // database to store app data
     rocksdb::DB* user_db; // database to store user data
 
@@ -73,7 +76,7 @@ public:
      * RETURNS: response to be sent to client
      * REQUIRES: dto pointer must contain the error field
     */
-    Response create_response(const oatpp::Void &dto);
+    Response create_response(const oatpp::data::mapping::type::DTOWrapper<RespDto> &dto);
 
     ////////////////////////
     //

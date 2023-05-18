@@ -19,6 +19,11 @@ class MyDto : public oatpp::DTO {
   DTO_FIELD(String, message);
 };
 
+class RespDto : public oatpp::DTO {
+  DTO_INIT(RespDto, DTO);
+  DTO_FIELD(String, error);
+};
+
 class GetTestDto : public oatpp::DTO {
   DTO_INIT(GetTestDto, DTO);
   DTO_FIELD(String, key);
@@ -31,10 +36,9 @@ class GetRecvDto : public oatpp::DTO {
   DTO_FIELD(String, category);
   DTO_FIELD(String, key_params); // JSON object parsed according to category
 };
-class GetRespDto : public oatpp::DTO {
+class GetRespDto : public RespDto {
   DTO_INIT(GetRespDto, DTO);
   DTO_FIELD(StringVector, values); // JSON object which will be parsed by client
-  DTO_FIELD(String, error);
 };
 
 class PutRecvDto : public oatpp::DTO {
@@ -45,18 +49,16 @@ class PutRecvDto : public oatpp::DTO {
   DTO_FIELD(String, key_params); // JSON object parsed according to category
   DTO_FIELD(String, value_params); // JSON object parsed according to category
 };
-class PutRespDto : public oatpp::DTO {
+class PutRespDto : public RespDto {
   DTO_INIT(PutRespDto, DTO);
-  DTO_FIELD(String, error);
 };
 
 class CreateBuddyRecvDto : public oatpp::DTO {
     DTO_INIT(CreateBuddyRecvDto, DTO);
     DTO_FIELD(String, path);
 };
-class CreateBuddyRespDto : public oatpp::DTO {
+class CreateBuddyRespDto : public RespDto {
     DTO_INIT(CreateBuddyRespDto, DTO);
-    DTO_FIELD(String, error);
     DTO_FIELD(String, folder_path);
 };
 
@@ -64,9 +66,8 @@ class ConnectBuddyRecvDto : public oatpp::DTO {
     DTO_INIT(ConnectBuddyRecvDto, DTO);
     DTO_FIELD(String, path);
 };
-class ConnectBuddyRespDto : public oatpp::DTO {
+class ConnectBuddyRespDto : public RespDto {
     DTO_INIT(ConnectBuddyRespDto, DTO);
-    DTO_FIELD(String, error);
 };
 
 class CreateClientRecvDto : public oatpp::DTO {
@@ -74,9 +75,8 @@ class CreateClientRecvDto : public oatpp::DTO {
     DTO_FIELD(String, name);
     DTO_FIELD(String, password);
 };
-class CreateClientRespDto : public oatpp::DTO {
+class CreateClientRespDto : public RespDto {
     DTO_INIT(CreateClientRespDto, DTO);
-    DTO_FIELD(String, error);
     DTO_FIELD(String, auth_token);
 };
 
@@ -85,9 +85,8 @@ class ConnectClientRecvDto : public oatpp::DTO {
     DTO_FIELD(String, name);
     DTO_FIELD(String, password);
 };
-class ConnectClientRespDto : public oatpp::DTO {
+class ConnectClientRespDto : public RespDto {
     DTO_INIT(ConnectClientRespDto, DTO);
-    DTO_FIELD(String, error);
     DTO_FIELD(String, auth_token);
 };
 
@@ -97,9 +96,8 @@ class AddClientRecvDto : public oatpp::DTO {
     DTO_FIELD(String, group);
     DTO_FIELD(String, name);
 };
-class AddClientRespDto : public oatpp::DTO {
+class AddClientRespDto : public RespDto {
     DTO_INIT(AddClientRespDto, DTO);
-    DTO_FIELD(String, error);
 };
 
 class CreateGroupRecvDto : public oatpp::DTO {
@@ -108,9 +106,8 @@ class CreateGroupRecvDto : public oatpp::DTO {
     DTO_FIELD(String, category);
     DTO_FIELD(String, group_name);
 };
-class CreateGroupRespDto : public oatpp::DTO {
+class CreateGroupRespDto : public RespDto {
     DTO_INIT(CreateGroupRespDto, DTO);
-    DTO_FIELD(String, error);
 };
 
 class CreateCategoryRecvDto : public oatpp::DTO {
@@ -119,26 +116,22 @@ class CreateCategoryRecvDto : public oatpp::DTO {
     DTO_FIELD(StringVector, key_params);
     DTO_FIELD(StringVector, value_params);
 };
-class CreateCategoryRespDto : public oatpp::DTO {
+class CreateCategoryRespDto : public RespDto {
     DTO_INIT(CreateCategoryRespDto, DTO);
-    DTO_FIELD(String, error);
 };
 
-class ListClientsRespDto : public oatpp::DTO {
+class ListClientsRespDto : public RespDto {
     DTO_INIT(ListClientsRespDto, DTO);
-    DTO_FIELD(String, error);
     DTO_FIELD(StringVector, clients);
 };
 
-class ListGroupsRespDto : public oatpp::DTO {
+class ListGroupsRespDto : public RespDto {
     DTO_INIT(ListGroupsRespDto, DTO);
-    DTO_FIELD(String, error);
     DTO_FIELD(oatpp::data::mapping::type::Vector<oatpp::data::mapping::type::Vector<StringVector>>, groups);
 };
 
-class ListCategoriesRespDto : public oatpp::DTO {
+class ListCategoriesRespDto : public RespDto {
     DTO_INIT(ListCategoriesRespDto, DTO);
-    DTO_FIELD(String, error);
     DTO_FIELD(oatpp::data::mapping::type::Vector<oatpp::data::mapping::type::Vector<StringVector>>, categories);
 };
 
