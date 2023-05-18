@@ -293,3 +293,7 @@ Connection Pools are a way in which multiple sockets can be reused to enhance pe
 
 There doesn't seem to be a hard and fast rule as to whether you should put parameters in the URI v. in the body of the request. I am going to default to body of request, so if I decide to convert to RPC based system the conversion will be simpler.
 
+5/18/23
+- Installing Nlohmann Json
+    - `apt-get install nlohmann-json3-dev`
+

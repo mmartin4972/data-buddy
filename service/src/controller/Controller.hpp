@@ -17,6 +17,12 @@
  * Core logic for handling endpoint requests. Calls into the functions housed in controller.cpp
  */
 class Controller : public oatpp::web::server::api::ApiController {
+private:
+
+    filesystem::path buddy_path; // path to the data buddy folder
+    rocksdb::DB* app_db; // database to store app data
+    rocksdb::DB* user_db; // database to store user data
+
 public:
     /**
      * Constructor with object mapper.
@@ -56,7 +62,18 @@ public:
     */
     bool is_dictionary_valid(Dictionary dict, String category);
 
+    /**
+     * RETURNS: true if the error string indicates success, false if not
+    */
+    bool is_successful(String error);
 
+    /**
+     * @param error: error message to be sent to client
+     * @param dto: dto to be sent to client
+     * RETURNS: response to be sent to client
+     * REQUIRES: dto pointer must contain the error field
+    */
+    Response create_response(const oatpp::Void &dto);
 
     ////////////////////////
     //
@@ -93,7 +110,8 @@ public:
     /**
      * @param path: absolute path to the location where the data buddy folder should be created
      * @param folder_path: absolute path to the folder that was created
-     * EFFECTS: creates the data buddy folder and stores the path to the folder in folder_path
+     * EFFECTS: creates the data buddy folder and stores the path to the folder in folder_path.
+     *   Will create a user database to store user data, and an app database to store client info, category info, and group info 
      * RETURNS: empty string if successful, error message if not
     */
     String do_create_buddy(String path, String& folder_path);
@@ -242,7 +260,7 @@ public:
     ENDPOINT("POST", "/db-create-buddy", create_buddy,
             BODY_DTO(Object<CreateBuddyRecvDto>, recv)) {
         // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is require!");
+        OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is required!");
         
         // Function Call
         String folder_path;
@@ -252,7 +270,7 @@ public:
         auto dto = CreateBuddyRespDto::createShared();
         dto->error = error;
         dto->folder_path = folder_path;
-        return createDtoResponse(Status::CODE_200, dto);
+        return create_response(dto);
     }
 
     ENDPOINT_INFO(connect_buddy) {
@@ -271,7 +289,7 @@ public:
         // Respond
         auto dto = ConnectBuddyRespDto::createShared();
         dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
+        return create_response(dto);
     }
 
     ENDPOINT_INFO(create_client) {
