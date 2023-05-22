@@ -91,7 +91,6 @@ public:
 
     /**
      * @param auth_token: authentication token for the client
-     * @param group: group the key is associated with
      * @param category: category the key is associated with
      * @param key_params: params used to construct the key
      * @param value_params: dictionary formatted as string with values corresponding to 
@@ -100,11 +99,10 @@ public:
      * RETURNS: empty string if successful, error message if not
     */
    // TODO: Modify this to include range based gets and such
-    String do_get(String auth_token, String group, String category, Dictionary key_params, StringVector& value_params);
+    String do_get(String auth_token, String category, Dictionary key_params, StringVector& value_params);
 
     /**
      * @param auth_token: authentication token for the client
-     * @param group: group the key is associated with
      * @param category: category the key is associated with
      * @param key_params: array of parameters needed to construct the key for the given category
      * @param value_params: array of parameters needed to construct the value for the given category
@@ -113,7 +111,7 @@ public:
      * EFFECTS: inserts the value into the associated key
      * RETURNS: empty string if successful, error message if not
     */
-    String do_put(String auth_token, String group, String category, Dictionary key_params, Dictionary value_params);
+    String do_put(String auth_token, String category, Dictionary key_params, Dictionary value_params);
 
     /**
      * @param path: absolute path to the location where the data buddy folder should be created
@@ -185,19 +183,22 @@ public:
     String do_create_category(String name, StringVector key_params, StringVector value_params);
 
     /**
-     * RETURNS: list of clients
+     * @param clients: list of clients and their associated groups
+     * RETURNS: empty string if successful, error message if not
     */
-    String do_list_clients();
+    String do_list_clients(StringVecVecVec& clients);
 
     /**
-     * RETURNS: list of groups and clients authorized to access them
+     * @param groups: list of groups, the group category, and clients authorized to access them
+     * RETURNS: empty string if successful, error message if not
     */
-    String do_list_groups();
+    String do_list_groups(StringVecVecVec& groups);
     
     /**
-     * RETURNS: list of categories and their key_params and value_params
+     * @param categories: list of categories containing their name, key_params, and value_params
+     * RETURNS: empty string if successful, error message if not
     */
-    String do_list_categories();
+    String do_list_categories(StringVecVecVec& categories);
 
     ////////////////////////
     //
@@ -388,25 +389,6 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
-    ENDPOINT_INFO(create_group) {
-        info->summary = "Create a new group";
-        info->addConsumes<Object<CreateGroupRecvDto>>("application/json");
-        info->addResponse<Object<CreateGroupRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-create-group", create_group,
-            BODY_DTO(Object<CreateGroupRecvDto>, recv)) {
-        // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
-        OATPP_ASSERT_HTTP(recv->category, Status::CODE_400, "'category' is require!");
-        OATPP_ASSERT_HTTP(recv->group_name, Status::CODE_400, "'group_name' is require!");
-        
-        // Function Call
-        String error = do_create_group(recv->auth_token, recv->category, recv->group_name);
-        
-        // Respond
-        auto dto = CreateGroupRespDto::createShared();
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
     }
 
     ENDPOINT_INFO(create_category) {
@@ -436,26 +418,14 @@ public:
     }
     ENDPOINT("GET", "/db-list-clients", list_clients) {
         // Function Call
-        String error = do_list_clients();
+        StringVector clients;
+        String error = do_list_clients(clients);
         
         // Respond
         auto dto = ListClientsRespDto::createShared();
         dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
-
-    ENDPOINT_INFO(list_groups) {
-        info->summary = "List all groups";
-        info->addResponse<Object<ListGroupsRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("GET", "/db-list-groups", list_groups) {
-        // Function Call
-        String error = do_list_groups();
-        
-        // Respond
-        auto dto = ListGroupsRespDto::createShared();
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
+        dto->clients = clients;
+        return create_response(error, dto);
     }
 
     ENDPOINT_INFO(list_categories) {
@@ -464,12 +434,14 @@ public:
     }
     ENDPOINT("GET", "/db-list-categories", list_categories) {
         // Function Call
-        String error = do_list_categories();
+        StringVecVecVec categories;
+        String error = do_list_categories(categories);
         
         // Respond
         auto dto = ListCategoriesRespDto::createShared();
         dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
+        dto->categories = categories;
+        return creeate_response(error, dto);
     }
 };
 

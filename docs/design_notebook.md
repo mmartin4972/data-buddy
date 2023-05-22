@@ -297,3 +297,29 @@ There doesn't seem to be a hard and fast rule as to whether you should put param
 - Installing Nlohmann Json
     - `apt-get install nlohmann-json3-dev`
 
+- You can open a select set of column families only if you are opening in read only mode
+- Otherwise you have to open all column families
+- You need to destroy all column family descriptors before you close a database
+    - https://github.com/EighteenZi/rocksdb_wiki/blob/master/Column-Families.md
+- It seems the only way to retrieve a range of keys is to appropriately configure the iterator for prefix iteration and then iterate through all of them to find the ones that you are looking for
+- They do not seem to have any range functions and do not iterate through the keys in any particular order. They are able to use a set of bloom filters to filter out keys that do not match your provided prefix, however, if they do match your provided prefix then you have to iterate over all of them due to lack of order
+- Because you are only able to filter by prefix, you want the most generic prefixes to come first and then get more and more specific afterwards, or you want to order your prefixes so that when you perform a lookup based on a certain index you are more likely to filter based on various prefixes. Or you have to search for all possible values of a given prefix in order to find your specific intermediary value.
+- May want your key_params have enums so that you can do this automatically
+- If people want to do more in depth analysis they can read out all of the values and then put it into a SQL database and then process it there. My database is only going to support relatively naive lookup
+- There is no way to iterate by a substring of a key. You can only iterate by the prefix of a key. It is a very very simple lookup system. Treat it as such. It may iterate though values lexicographically. ChatGPT said that it should not do this, but docs seem to indicate that it does do this.
+- For this first implementation is best to assume that all keys are stored lexicographically and that the only way to query them is by the lexicographical ordering of their prefixes. This should be good enough for many functions.
+- You can iterate through column families, but you cannot iterate across column families. I think you are better off not using column families and just using prefix iteration for everything and storing all keys into default. Then you can easily extract all data of a certain category
+- Column families can also be useful for deleting a large set of keys, however, I do not plan on doing this often, so it is likely best that we avoid this.
+- Since I am going to be keeping a list of clients as well as categories and I don't expect these lists to grow very large, I can by default order all keys by starting their prefix with category, client, and then providing an abstraction that allows people to get keys across different categories and clients, by executing multiple queries
+- DO Not have keys based on clients. Just include the client name into all of the values of every single key
+- Keys will be constructed as Category::key_params and you will maintain a list of all the categories that you know
+
+TODO:
+- remove all code dealing with groups
+- create insert helper functions to insert according to category and that make sure the client is included in value
+- The main value proposition is going to be in all of the extermities that you implement for this server and how easy it is for additional plugins to start saving off user data, and the plugins that are able to take this data and extract cool insights from it. At this point I wouldn't be too focused on making this backbone server super flexible and easy to query. You just want it to be lightweight, easy to interface with, simple, and fast.
+
+## 5/22/23
+- When it comes to security remember that you don't necesarilly need all of these super complex and expensive cybersecure applications. Having a website that emphasizes transparency and security and a rating system like Visual Studio Code extensions can go along way in building trust and is often times more helpful than all of the complex engineering solutions.
+- When performing range searches for numerical values you can only search via the not including the least significant digits. e.g. The range 1204 - 1406 could not be represented. We can find ranges 1000 - 1999, 1200 - 1299, and 1200 - 1209 since for each one we specify an additional digit which is less significant than the prior to narrow down our range. Searching for a different range will be much more difficult.
+- The key_param and value_param types we should accept are int, float, string, and date

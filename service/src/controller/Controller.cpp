@@ -104,6 +104,19 @@ bool Controller::is_buddy_connected() {
     return buddy_path.empty() == false;
 }
 
+String db_put(rocksdb::DB* db, String key, String value) {
+    std::string error = "";
+    rocksdb::Status status = db->Put(rocksdb::WriteOptions(), key, value);
+    if (!status.ok()) {
+        error = status.ToString();
+    }
+    return error;
+}
+
+String client_put(String name, String password) {
+
+}
+
 ////////////////////////
 //
 //  Endpoint Functions
@@ -138,7 +151,7 @@ String Controller::do_create_buddy(String path, String& folder_path) {
         // Create the app database
         fs::path app_path = p;
         app_path.append(APP_DB);
-        open_db_or_error(options, app_path.string(), &app_db);
+        open_db_or_error(options, app_path.string(), &app_db);        
 
         // Create the user database
         fs::path user_path = p;
@@ -199,7 +212,8 @@ String Controller::do_disconnect_buddy() {
     }
     buddy_path = fs::path();
     try {
-        app_db->Close();
+        app_db->Close(); // TODO: may be unnecessary
+        delete app_db;
     }
     catch (const std::runtime_error& e) {
         error += e.what();
@@ -207,6 +221,7 @@ String Controller::do_disconnect_buddy() {
 
     try {
         user_db->Close();
+        delete user_db;
     }
     catch (const std::runtime_error& e) {
         error += e.what();
@@ -215,7 +230,8 @@ String Controller::do_disconnect_buddy() {
 }
 
 String Controller::do_create_client(String name, String password, String& auth_token) {
-    return "";
+    
+    app_db->Put
 }
 
 String Controller::do_connect_client(String name, String password, String& auth_token) {
@@ -234,15 +250,11 @@ String Controller::do_create_category(String name, StringVector key_params, Stri
     return "";
 }
 
-String Controller::do_list_clients() {
+String Controller::do_list_clients(StringVecVecVec& clients) {
     return "";
 }
 
-String Controller::do_list_groups() {
-    return "";
-}
-
-String Controller::do_list_categories() {
+String Controller::do_list_categories(StringVecVecVec& categories) {
     return "";
 }
 

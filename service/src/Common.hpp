@@ -12,6 +12,7 @@ using Dictionary = std::unordered_map<std::string, std::string>;
 using String = oatpp::data::mapping::type::String;
 using StringVector = oatpp::data::mapping::type::Vector<String>;
 using Response = std::shared_ptr<oatpp::web::server::api::ApiController::OutgoingResponse>;
+using StringVecVecVec = oatpp::data::mapping::type::Vector<oatpp::data::mapping::type::Vector<StringVector>>;
 
 const std::string DATA_BUDDY_FOLDER = "data_buddy";
 const std::string APP_DB = "app_db";

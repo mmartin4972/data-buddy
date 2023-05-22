@@ -138,13 +138,13 @@ class ListClientsRespDto : public oatpp::DTO {
 class ListGroupsRespDto : public oatpp::DTO {
     DTO_INIT(ListGroupsRespDto, DTO);
     DTO_FIELD(String, error);
-    DTO_FIELD(oatpp::data::mapping::type::Vector<oatpp::data::mapping::type::Vector<StringVector>>, groups);
+    DTO_FIELD(StringVecVecVec, groups);
 };
 
 class ListCategoriesRespDto : public oatpp::DTO {
     DTO_INIT(ListCategoriesRespDto, DTO);
     DTO_FIELD(String, error);
-    DTO_FIELD(oatpp::data::mapping::type::Vector<oatpp::data::mapping::type::Vector<StringVector>>, categories);
+    DTO_FIELD(StringVecVecVec, categories);
 };
 
 #include OATPP_CODEGEN_END(DTO)
