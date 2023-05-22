@@ -242,11 +242,10 @@ String Controller::do_add_client(String auth_token, String group, String name) {
     return "";
 }
 
-String Controller::do_create_group(String auth_token, String category, String group_name) {
-    return "";
-}
-
 String Controller::do_create_category(String name, StringVector key_params, StringVector value_params) {
+    // Check category doesn't already exist
+
+    // Add able to be accessed by creating client
     return "";
 }
 

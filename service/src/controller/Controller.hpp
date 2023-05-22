@@ -117,7 +117,7 @@ public:
      * @param path: absolute path to the location where the data buddy folder should be created
      * @param folder_path: absolute path to the folder that was created
      * EFFECTS: creates the data buddy folder and stores the path to the folder in folder_path.
-     *   Will create a user database to store user data, and an app database to store client info, category info, and group info 
+     *   Will create a user database to store user data, and an app database to store client info, category info, and permission info
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is not currently connected
     */
@@ -125,7 +125,8 @@ public:
 
     /**
      * @param path: absolute path to the location of the data buddy folder
-     * EFFECTS: connects to an existing data buddy folder. Will disconnect you from any currently connected data buddy folder regardless if new connection is successful or not
+     * EFFECTS: connects to an existing data buddy folder. Will disconnect you from any currently connected data buddy folder 
+     *  regardless if new connection is successful or not
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is not currently connected
     */
@@ -156,28 +157,20 @@ public:
 
     /**
      * @param auth_token: authentication token for the client requesting the add
-     * @param group: group to add the client with 'name' to
-     * @param name: name of the client to add to the group
-     * REQUIRES: client that owns auth_token also owns group
-     * EFFECTS: allows the specified client to access the specified group
+     * @param category: category to add the client with 'name' to
+     * @param name: name of the client to add to the category
+     * REQUIRES: client that owns auth_token also owns category
+     * EFFECTS: allows the specified client to access the specified category
      * RETURNS: empty string if successful, error message if not
     */
-    String do_add_client(String auth_token, String group, String name);
-
-    /**
-     * @param auth_token: authentication token for the client
-     * @param category: category associated with the group
-     * @param group_name: name of group to create
-     * EFFECTS: creates a new group
-     * RETURNS: empty string if successful, error message if not
-    */
-    String do_create_group(String auth_token, String category, String group_name);   
+    String do_add_client(String auth_token, String category, String name);
 
     /**
      * @param name: name of category to create
      * @param key_params: parameters needed to construct the key for the category
      * @param value_params: parameters needed to construct the value for the category
-     * EFFECTS: creates a new category in category column family
+     * REQUIRES: category does not already exist
+     * EFFECTS: creates a new category in category column family. Creator will automatically be given access to the category
      * RETURNS: empty string if successful, error message if not
     */
     String do_create_category(String name, StringVector key_params, StringVector value_params);
@@ -187,12 +180,6 @@ public:
      * RETURNS: empty string if successful, error message if not
     */
     String do_list_clients(StringVecVecVec& clients);
-
-    /**
-     * @param groups: list of groups, the group category, and clients authorized to access them
-     * RETURNS: empty string if successful, error message if not
-    */
-    String do_list_groups(StringVecVecVec& groups);
     
     /**
      * @param categories: list of categories containing their name, key_params, and value_params

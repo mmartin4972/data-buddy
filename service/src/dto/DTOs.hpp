@@ -113,10 +113,6 @@ class CreateGroupRecvDto : public oatpp::DTO {
     DTO_FIELD(String, category);
     DTO_FIELD(String, group_name);
 };
-class CreateGroupRespDto : public oatpp::DTO {
-    DTO_INIT(CreateGroupRespDto, DTO);
-    DTO_FIELD(String, error);
-};
 
 class CreateCategoryRecvDto : public oatpp::DTO {
     DTO_INIT(CreateCategoryRecvDto, DTO);
@@ -133,12 +129,6 @@ class ListClientsRespDto : public oatpp::DTO {
     DTO_INIT(ListClientsRespDto, DTO);
     DTO_FIELD(String, error);
     DTO_FIELD(StringVector, clients);
-};
-
-class ListGroupsRespDto : public oatpp::DTO {
-    DTO_INIT(ListGroupsRespDto, DTO);
-    DTO_FIELD(String, error);
-    DTO_FIELD(StringVecVecVec, groups);
 };
 
 class ListCategoriesRespDto : public oatpp::DTO {

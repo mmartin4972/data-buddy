@@ -323,3 +323,7 @@ TODO:
 - When it comes to security remember that you don't necesarilly need all of these super complex and expensive cybersecure applications. Having a website that emphasizes transparency and security and a rating system like Visual Studio Code extensions can go along way in building trust and is often times more helpful than all of the complex engineering solutions.
 - When performing range searches for numerical values you can only search via the not including the least significant digits. e.g. The range 1204 - 1406 could not be represented. We can find ranges 1000 - 1999, 1200 - 1299, and 1200 - 1209 since for each one we specify an additional digit which is less significant than the prior to narrow down our range. Searching for a different range will be much more difficult.
 - The key_param and value_param types we should accept are int, float, string, and date
+    - int, float, and string can all follow the C++ standards in terms of precison
+- Certain clients will only be allowed to access certain categories
+- To add a client to a category you must have permission to that category
+- The viewer is also going to be a client, however, it is going to be standard protocol that everyone gives the viewer access to their category once the client creates it
