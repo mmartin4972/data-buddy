@@ -6,6 +6,7 @@
 
 #include "Common.hpp"
 #include "dto/DTOs.hpp"
+#include "controller/RocksWrapper.hpp"
 
 #include "rocksdb/db.h"
 
@@ -23,8 +24,8 @@ class Controller : public oatpp::web::server::api::ApiController {
 private:
 
     std::filesystem::path buddy_path; // path to the data buddy folder
-    rocksdb::DB* app_db; // database to store app data
-    rocksdb::DB* user_db; // database to store user data
+    Common::RocksWrapper_ptr app_db; // database to store app data
+    Common::RocksWrapper_ptr user_db; // database to store user data
 
 public:
     /**
@@ -34,8 +35,6 @@ public:
     Controller(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
     : oatpp::web::server::api::ApiController(objectMapper)
     {}
-
-
 
     ////////////////////////
     //
@@ -99,7 +98,7 @@ public:
      * RETURNS: empty string if successful, error message if not
     */
    // TODO: Modify this to include range based gets and such
-    String do_get(String auth_token, String category, Dictionary key_params, StringVector& value_params);
+    String do_get(String auth_token, Dictionary key_params, Dictionary& value_params);
 
     /**
      * @param auth_token: authentication token for the client
@@ -111,7 +110,7 @@ public:
      * EFFECTS: inserts the value into the associated key
      * RETURNS: empty string if successful, error message if not
     */
-    String do_put(String auth_token, String category, Dictionary key_params, Dictionary value_params);
+    String do_put(String auth_token, Dictionary key_params, Dictionary value_params);
 
     /**
      * @param path: absolute path to the location where the data buddy folder should be created

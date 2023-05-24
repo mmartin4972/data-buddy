@@ -51,35 +51,15 @@ int Controller::db_test() {
     return 0;
 }
 
-Dictionary Controller::string_to_dictionary(String string) {
-    Dictionary dict;
-    std::string jsonString = (std::string)string;
-    json jsonData = json::parse(jsonString);
-
-    for (json::iterator it = jsonData.begin(); it != jsonData.end(); ++it) {
-        if (it.value().is_string()) {
-            dict[it.key()] = it.value().get<std::string>();
-        }
-    }
-
-    return dict;
-}
-
-String Controller::dictionary_to_string(Dictionary dict) {
-    json jsonMap;
-
-    for (const auto& pair : dict) {
-        jsonMap[pair.first] = pair.second;
-    }
-
-    return jsonMap.dump();
-}
-
 bool Controller::is_dictionary_valid(Dictionary dict, String category) {
     return true;
 }
 
 bool Controller::is_successful(String error) {
+    return is_successful((std::string)error);
+}
+
+bool Controller::is_successful(std::string error) {
     return error == "";
 }
 
@@ -123,17 +103,8 @@ String client_put(String name, String password) {
 //
 ////////////////////////
 
-String Controller::do_get(String auth_token, String group, String category, Dictionary key_params, StringVector& value_params) {
-    value_params = {"Hello", "World!"};
-    return "";
-}
-
-String Controller::do_put(String auth_token, String group, String category, Dictionary key_params, Dictionary value_params) {
-    return "";
-}
-
 // TODO: Security vulnerability in that anyone can read the app data, which should be private
-String Controller::do_create_buddy(String path, String& folder_path) {
+String Controller::do_create_buddy(const String& path, String& folder_path) {
     std::string error = "";
     rocksdb::Options options;
     options.create_if_missing = true;
@@ -150,13 +121,12 @@ String Controller::do_create_buddy(String path, String& folder_path) {
 
         // Create the app database
         fs::path app_path = p;
-        app_path.append(APP_DB);
-        open_db_or_error(options, app_path.string(), &app_db);        
+        app_db = RocksWrapper::create_db(app_path.string(), APP_DB);       
 
         // Create the user database
         fs::path user_path = p;
-        user_path.append(USER_DB);
-        open_db_or_error(options, user_path.string(), &user_db);
+        user_db = RocksWrapper::create_db(user_db.string(), USER_DB);       
+
 
     } catch (const fs::filesystem_error& e) {
         error = e.what();
@@ -212,16 +182,14 @@ String Controller::do_disconnect_buddy() {
     }
     buddy_path = fs::path();
     try {
-        app_db->Close(); // TODO: may be unnecessary
-        delete app_db;
+        delete app_db; // TODO: Should probably check that there is only one instance of this object
     }
     catch (const std::runtime_error& e) {
         error += e.what();
     }
 
     try {
-        user_db->Close();
-        delete user_db;
+        delete user_db; // TODO: should probably check that there is only one instance of this object
     }
     catch (const std::runtime_error& e) {
         error += e.what();
@@ -230,8 +198,18 @@ String Controller::do_disconnect_buddy() {
 }
 
 String Controller::do_create_client(String name, String password, String& auth_token) {
-    
-    app_db->Put
+    String error = "";
+    std::string key = "client:" + (std::string)name;
+    if (!is_successful(app_db->get(key, Dictionary tmp))) {
+        Dictionary val = {{PASSWORD, password}};
+        error += app_db->put(key, val);
+        if (is_successful(error)) {
+            // Read from environment a secret key. Then use user id to generate the authentication token with some encryption method
+        }
+    } else {
+        error += "Client already exists";
+    }
+    return error;
 }
 
 String Controller::do_connect_client(String name, String password, String& auth_token) {
@@ -239,6 +217,10 @@ String Controller::do_connect_client(String name, String password, String& auth_
 }
 
 String Controller::do_add_client(String auth_token, String group, String name) {
+    return "";
+}
+
+String Controller::do_disconnect_client(String auth_token) {
     return "";
 }
 

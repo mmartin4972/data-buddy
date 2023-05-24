@@ -327,3 +327,14 @@ TODO:
 - Certain clients will only be allowed to access certain categories
 - To add a client to a category you must have permission to that category
 - The viewer is also going to be a client, however, it is going to be standard protocol that everyone gives the viewer access to their category once the client creates it
+
+## 5/24/23
+- App Database Categories and Prefixes
+    - client:: (name) = json with info about when issued and password
+    - auth_token:: (token_num) = json with info about when issued and client issued to
+    - category:: (name) = json with format of key and format of value
+- Note: just make the key value store force the values stored to always be json objects and then optimize for this paradigm
+- Note: the category, auth_token, and client category types should not be added to the app database. This is going to confuse the logic for the do_list_categories function. The conventions for these also do not need to be made available to external users.
+- Will not be useful for decoding, since we do not want to perform two gets for every get issued by the user, however, it can be useful for providing the user information about the structure of the database as well as checking that inserts are formed properly.
+- Create a class that wraps the RocksDB database. This class can make the assumptions that the RocksDB database keys are all jsons and can also maintain an internal set data structure which tracks categories if we do not want to have to go to the database for every lookup, however, at first we should just do this
+-  
