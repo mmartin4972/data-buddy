@@ -6,6 +6,9 @@
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
 
+#include <nlohmann/json.hpp>
+#include <json-schema-validator/validator.hpp>
+
 /**
  * Wrapper class that wraps the RocksDB, so that we can constrain the 
  * way in which values are read and written to the database.
@@ -17,6 +20,8 @@ class RocksWrapper {
     static unordered_set<fs::path> opened_paths;
     rocksdb::DB* db;
     fs::path path;
+    const unsigned int max_key_size = Common::ROCKSDB_MAX_KEY_SIZE;
+    const unsigned int max_value_size = Common::ROCKSDB_MAX_VALUE_SIZE;
 
     RocksWrapper(fs::path path) {
         if (is_path_opened(path)) {
@@ -24,6 +29,10 @@ class RocksWrapper {
         };
         this->path = path;
         opened_paths.insert(this->path);
+    }
+
+    bool does_json_conform_schema(const std::string& schema, const std::string& data) {
+        return json_schema_validator::validate(json::parse(schema), json::parse(data));
     }
 
     public:
@@ -73,17 +82,41 @@ class RocksWrapper {
 
     /**
      * Gets the value associated with the given key
-     * @param key The key to get the value for
+     * @param key_schema: The json schema that the key must conform to
+     * @param key: The key to get the value for
+     * @param prefix_key: The key, in the provided key object, which marks the end of the prefix. The prefix_key is not included in the search prefix. If this is an empty string then we don't search by prefix
+     * @param values: Object that the list of value associated with the key is returned in
      * @return The value associated with the given key, or an empty string if the key does not exist
+     * REQUIRES: The key is less than max_key_size
+     * EFFECTS: Throws an error if the requested key does not exist
     */
-    std::string get(const std::string& key, Dictionary& value) {
+    std::string get(const std::string& key_schema, const std::string& key, const std::string& prefix_key, std::vector<std::string>& values) {
         std::string error = "";
-        std::string tmp;
-        rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &tmp);
-        if (!status.ok()) {
-            error = status.ToString();
+        
+        // Check key size
+        if (key.size() > max_key_size) {
+            error = "The given key is too large";
+        } else if(!does_json_conform_schema(key_schema, key)) { // Check key schema
+            error = "The given key does not conform to the given schema";
         } else {
-            value = Common::string_to_dictionary(tmp);
+            if (prefix_key.empty()) { // If we are not searching by prefix
+                std::string value;
+                rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &value);
+                values.push_back(value);
+                if (!status.ok()) { // Check get Status
+                    error = status.ToString();
+                }
+            } else { // If we are searching by prefix
+                std::string prefix = key.substr(0, key.find(prefix_key));
+                // TODO: do we need to check that prefix_key exists?
+                auto iter = DB::NewIterator(ReadOptions());
+                for (iter.Seek(prefix); iter.Valid() && iter.key().starts_with(prefix); iter.Next()) {
+                    values.push_back(iter.value().ToString());
+                }
+            }
+            if (values.empty()) {
+                error = "The given key does not exist";
+            }
         }
         return error;
     }
@@ -92,13 +125,28 @@ class RocksWrapper {
      * Puts the given key-value pair into the database
      * @param key The key to put into the database
      * @param value The value to put into the database
+     * @param key_schema: The json schema that the key must conform to
+     * @param value_schema: The json schema that the value must conform to
      * @return An empty string if the put was successful, otherwise an error message
+     * REQUIRES: The key is less than max_key_size
+     * REQUIRES: The value is less than max_value_size
     */
-    std::string put(const std::string& key, Dictionary& value) {
+   // TODO: you may want to consider throwing an error instead of returning a string?
+    std::string put(const std::string& key_schema, const std::string& key, const std::string& value_schema, const std::string& value) {
         std::string error = "";
-        rocksdb::Status status = db->Put(rocksdb::WriteOptions(), key, (std::string)Common::dictionary_to_string(value));
-        if (!status.ok()) {
-            error = status.ToString();
+        if (key.size() > max_key_size) {
+            error = "The given key is too large";
+        } else if (value.size() > max_value_size) {
+            error = "The given value is too large";
+        } else if (!does_json_conform_schema(key_schema, key)) {
+            error = "The given key does not conform to the given schema";
+        } else if (!does_json_conform_schema(value_schema, value)) {
+            error = "The given value does not conform to the given schema";
+        } else {    
+            rocksdb::Status status = db->Put(rocksdb::WriteOptions(), key, value);
+            if (!status.ok()) {
+                error += status.ToString();
+            }
         }
         return error;
     }

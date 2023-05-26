@@ -26,6 +26,7 @@ private:
     std::filesystem::path buddy_path; // path to the data buddy folder
     Common::RocksWrapper_ptr app_db; // database to store app data
     Common::RocksWrapper_ptr user_db; // database to store user data
+    unsigned long long largest_client_num = 0; // largest client number used so far 
 
 public:
     /**
@@ -89,28 +90,31 @@ public:
     ////////////////////////
 
     /**
+     * @param name: name of the client
      * @param auth_token: authentication token for the client
      * @param category: category the key is associated with
-     * @param key_params: params used to construct the key
-     * @param value_params: dictionary formatted as string with values corresponding to 
-     *   names of the various category values associated with the key
-     * EFFECTS: populates the value_params dictionary with the values associated with the key
+     * @param key: key used to access the dictionary
+     * @param value: value populated with single value gotten by key or list of values retrieved in the range seek
+     * EFFECTS: populates the value string with the values associated with the key according to the
+     *  value_schema associated with the provided category
      * RETURNS: empty string if successful, error message if not
+     * REQUIRES: key complies with category's key_schema 
     */
    // TODO: Modify this to include range based gets and such
-    String do_get(String auth_token, Dictionary key_params, Dictionary& value_params);
+    String do_get(const String& name, const String& auth_token, const String& key_schema, const String& key, const String& prefix_key, String& value);
 
     /**
+     * @param name: name of the client
      * @param auth_token: authentication token for the client
      * @param category: category the key is associated with
-     * @param key_params: array of parameters needed to construct the key for the given category
-     * @param value_params: array of parameters needed to construct the value for the given category
-     * REQUIRES: formatting of key corresponds with formatting of category
-     * REQUIRES: formatting of value corresponds with formatting of category
+     * @param key: array of parameters needed to construct the key for the given category
+     * @param value: array of parameters needed to construct the value for the given category
      * EFFECTS: inserts the value into the associated key
      * RETURNS: empty string if successful, error message if not
+     * REQUIRES: key complies with category's key_schema 
+     * REQUIRES: value complies with category's value_schema
     */
-    String do_put(String auth_token, Dictionary key_params, Dictionary value_params);
+    String do_put(const String& name, String auth_token, const String& key_schema, const String& key, const String& value_schema, const String& value);
 
     /**
      * @param path: absolute path to the location where the data buddy folder should be created
@@ -120,7 +124,7 @@ public:
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is not currently connected
     */
-    String do_create_buddy(String path, String& folder_path);
+    String do_create_buddy(const String& path, String& folder_path);
 
     /**
      * @param path: absolute path to the location of the data buddy folder
@@ -129,7 +133,7 @@ public:
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is not currently connected
     */
-    String do_connect_buddy(String path);
+    String do_connect_buddy(const String& path);
 
     /**
      * EFFECTS: disconnects from the data buddy folder
@@ -144,7 +148,7 @@ public:
      * EFFECTS: creates a new client in client database. Will populate auth_token if successful.
      * RETURNS: empty string if successful, error message if not
     */
-    String do_create_client(String name, String password, String& auth_token);
+    String do_create_client(const String& name, const String& password, String& auth_token);
 
     /**
      * @param name: name of the client
@@ -152,39 +156,44 @@ public:
      * EFFECTS: attempts to validate client by checking client database for the provided credentials. Will populate auth_token if successful
      * RETURNS: empty string if successful, error message if not
     */
-    String do_connect_client(String name, String password, String& auth_token);
+    String do_connect_client(const String& name, const String& password, String& auth_token);
 
     /**
+     * @param client_name: name of the client requesting the add
      * @param auth_token: authentication token for the client requesting the add
      * @param category: category to add the client with 'name' to
-     * @param name: name of the client to add to the category
+     * @param add_name: name of the client to add to the category
      * REQUIRES: client that owns auth_token also owns category
      * EFFECTS: allows the specified client to access the specified category
      * RETURNS: empty string if successful, error message if not
     */
-    String do_add_client(String auth_token, String category, String name);
+    String do_add_client(const String& client_name, const String& auth_token, const String& category, const String& add_name);
 
     /**
+     * @param client_name: name of the client requesting the creation
+     * @param auth_token: authentication token for the client requesting the creation
      * @param name: name of category to create
-     * @param key_params: parameters needed to construct the key for the category
-     * @param value_params: parameters needed to construct the value for the category
+     * @param key_schema: json schema needed to construct the key for the category
+     * @param value_schema: json schema needed to construct the value for the category
      * REQUIRES: category does not already exist
      * EFFECTS: creates a new category in category column family. Creator will automatically be given access to the category
      * RETURNS: empty string if successful, error message if not
     */
-    String do_create_category(String name, StringVector key_params, StringVector value_params);
+    String do_create_category(const String& client_name, const String& auth_token,const String& name, const String& key_schema, const String& value_schema);
 
     /**
      * @param clients: list of clients and their associated groups
+     * @param client_schema: json schema needed to construct the client
      * RETURNS: empty string if successful, error message if not
     */
-    String do_list_clients(StringVecVecVec& clients);
+    String do_list_clients(String& clients, String& client_schema);
     
     /**
      * @param categories: list of categories containing their name, key_params, and value_params
+     * @param category_schema: json schema needed to construct the categories object
      * RETURNS: empty string if successful, error message if not
     */
-    String do_list_categories(StringVecVecVec& categories);
+    String do_list_categories(String& categories, String& category_schema);
 
     ////////////////////////
     //
@@ -224,11 +233,12 @@ public:
     ENDPOINT("POST", "/db-get", get,
             BODY_DTO(Object<GetRecvDto>, recv)) {
         // Formatting Checks
+        // TODO: complete these
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
         // Function Call
         StringVector values;
-        String error = do_get(recv->auth_token, recv->group, recv->category, string_to_dictionary(recv->key_params), values);
+        String error = do_get(recv->auth_token, recv->category, string_to_dictionary(recv->key_params), values);
         
         // Respond
         auto dto = GetRespDto::createShared();

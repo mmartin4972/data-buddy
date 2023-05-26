@@ -337,4 +337,22 @@ TODO:
 - Note: the category, auth_token, and client category types should not be added to the app database. This is going to confuse the logic for the do_list_categories function. The conventions for these also do not need to be made available to external users.
 - Will not be useful for decoding, since we do not want to perform two gets for every get issued by the user, however, it can be useful for providing the user information about the structure of the database as well as checking that inserts are formed properly.
 - Create a class that wraps the RocksDB database. This class can make the assumptions that the RocksDB database keys are all jsons and can also maintain an internal set data structure which tracks categories if we do not want to have to go to the database for every lookup, however, at first we should just do this
--  
+- Tomorrow you MUST finish the server. You are signficantly closer than you think.
+
+## 5/25/23
+- Instead of making auth_token a property of the value that is stored for a client name, I am going to create a completely seperarate key prefixed with auth and store all client auth information in the value accessed by this key. This will make range delections for these authentication tokens far easier.
+- As clients get added to a category I am going to create a new entry with their name in the value dictionary and will use the existence of their name as a way to check if they have authorization?
+- oatpp has a way of converting a DTO type to a json object very easily, however, the DTO type must be defined in terms of maps and lists, which is all I really need, however, it must be defined beforehand, and I want my category json values to be able to be constructed on the fly
+- They have to be built beforehand however, because they are using macros for the majority of their interface
+- I could create a serializer and deserializer for a base class type which has an adjustable structure based on the definition and then use this serializer with the framework, but I think that this is far too much work
+- I don't want to constrain the value that I store to RocksDB to be just dictionaries, however, because the data transfer interface is limited my database may need to be limited
+- However, I can remove the dictionary constraint on the RocksDB and then just have the values sent by the client be strings that are registered in json format and then just require that the category defined is able to validly check if the json string which was sent over is of type category and can be validly stored
+- I'll need to build helper functions on the server side to deal with the strings, howeveer, this would make the storage far more versatile, which would be convenient.
+- the rocksdb wrapper will consequently store strings and must be given an encoding and it will check that the provided string meets the encoding specified
+- I believe that I can use the json schema validator to satisfy my requirements above
+
+## 5/26/23
+- A total ordering exists in the rocksdb which maintains the order in which keys were inserted into the database
+- Normally, this total ordering is not maintained if the prefix extractor is used, however, some readOptions can be set to allow you to do this.
+- https://github.com/EighteenZi/rocksdb_wiki/blob/master/Prefix-Seek-API-Changes.md
+- 

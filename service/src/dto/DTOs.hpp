@@ -26,10 +26,10 @@ class GetTestDto : public oatpp::DTO {
 
 class GetRecvDto : public oatpp::DTO {
   DTO_INIT(GetRecvDto, DTO);
+  DTO_FIELD(String, name);
   DTO_FIELD(String, auth_token);
-  DTO_FIELD(String, group);
   DTO_FIELD(String, category);
-  DTO_FIELD(String, key_params); // JSON object parsed according to category
+  DTO_FIELD(String, key); // JSON object parsed according to key_schema
 };
 class GetRespDto : public oatpp::DTO {
   DTO_INIT(GetRespDto, DTO);
@@ -39,11 +39,11 @@ class GetRespDto : public oatpp::DTO {
 
 class PutRecvDto : public oatpp::DTO {
   DTO_INIT(PutRecvDto, DTO);
+  DTO_FIELD(String, name);
   DTO_FIELD(String, auth_token);
-  DTO_FIELD(String, group);
   DTO_FIELD(String, category);
-  DTO_FIELD(String, key_params); // JSON object parsed according to category
-  DTO_FIELD(String, value_params); // JSON object parsed according to category
+  DTO_FIELD(String, key); // JSON object parsed according to key_schema
+  DTO_FIELD(String, value); // JSON object parsed according to value_schema
 };
 class PutRespDto : public oatpp::DTO {
   DTO_INIT(PutRespDto, DTO);
@@ -99,7 +99,7 @@ class ConnectClientRespDto : public oatpp::DTO {
 class AddClientRecvDto : public oatpp::DTO {
     DTO_INIT(AddClientRecvDto, DTO);
     DTO_FIELD(String, auth_token);
-    DTO_FIELD(String, group);
+    DTO_FIELD(String, category);
     DTO_FIELD(String, name);
 };
 class AddClientRespDto : public oatpp::DTO {
@@ -107,18 +107,11 @@ class AddClientRespDto : public oatpp::DTO {
     DTO_FIELD(String, error);
 };
 
-class CreateGroupRecvDto : public oatpp::DTO {
-    DTO_INIT(CreateGroupRecvDto, DTO);
-    DTO_FIELD(String, auth_token);
-    DTO_FIELD(String, category);
-    DTO_FIELD(String, group_name);
-};
-
 class CreateCategoryRecvDto : public oatpp::DTO {
     DTO_INIT(CreateCategoryRecvDto, DTO);
     DTO_FIELD(String, name);
-    DTO_FIELD(StringVector, key_params);
-    DTO_FIELD(StringVector, value_params);
+    DTO_FIELD(String, key_schema);
+    DTO_FIELD(String, value_schema);
 };
 class CreateCategoryRespDto : public oatpp::DTO {
     DTO_INIT(CreateCategoryRespDto, DTO);
@@ -128,13 +121,15 @@ class CreateCategoryRespDto : public oatpp::DTO {
 class ListClientsRespDto : public oatpp::DTO {
     DTO_INIT(ListClientsRespDto, DTO);
     DTO_FIELD(String, error);
-    DTO_FIELD(StringVector, clients);
+    DTO_FIELD(String, clients);
+    DTO_FIELD(String, client_schema);
 };
 
 class ListCategoriesRespDto : public oatpp::DTO {
     DTO_INIT(ListCategoriesRespDto, DTO);
     DTO_FIELD(String, error);
-    DTO_FIELD(StringVecVecVec, categories);
+    DTO_FIELD(String, categories);
+    DTO_FIELD(String, category_schema);
 };
 
 #include OATPP_CODEGEN_END(DTO)
