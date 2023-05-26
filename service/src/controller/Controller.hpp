@@ -92,9 +92,10 @@ public:
     /**
      * @param name: name of the client
      * @param auth_token: authentication token for the client
-     * @param category: category the key is associated with
+     * @param key_schema: structure of the json schema that the key follows
      * @param key: key used to access the dictionary
-     * @param value: value populated with single value gotten by key or list of values retrieved in the range seek
+     * @param prefix_key: The key, in the provided key object, which marks the end of the prefix. The prefix_key is not included in the search prefix. If this is an empty string then we don't search by prefix
+     * @param value: value populated with a json array of all of the values retrieved by the get
      * EFFECTS: populates the value string with the values associated with the key according to the
      *  value_schema associated with the provided category
      * RETURNS: empty string if successful, error message if not
@@ -106,9 +107,10 @@ public:
     /**
      * @param name: name of the client
      * @param auth_token: authentication token for the client
-     * @param category: category the key is associated with
-     * @param key: array of parameters needed to construct the key for the given category
-     * @param value: array of parameters needed to construct the value for the given category
+     * @param key_schema: structure of the json schema that the key follows
+     * @param key: json string that is queried by
+     * @param value_schema: structure of the json schema that the value follows
+     * @param value: json string that is inserted into the database
      * EFFECTS: inserts the value into the associated key
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: key complies with category's key_schema 
@@ -383,8 +385,6 @@ public:
         auto dto = AddClientRespDto::createShared();
         dto->error = error;
         return createDtoResponse(Status::CODE_200, dto);
-    }
-
     }
 
     ENDPOINT_INFO(create_category) {
