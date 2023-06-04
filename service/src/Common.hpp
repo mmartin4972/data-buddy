@@ -18,6 +18,7 @@
 // ALIAS DEFINITIONS
 //
 //////////////////////
+using string = std::string;
 using String = oatpp::data::mapping::type::String;
 using Response = std::shared_ptr<oatpp::web::server::api::ApiController::OutgoingResponse>;
 namespace fs = std::filesystem;
@@ -33,19 +34,19 @@ using json = nlohmann::json;
 /////////////////////
 #define ROCKSDB_MAX_KEY_SIZE 1024
 #define ROCKSDB_MAX_VALUE_SIZE 65535
-const std::string DATA_BUDDY_FOLDER = "data_buddy";
-const std::string APP_DB = "app_db";
-const std::string USER_DB = "user_db";
-const std::string CATEGORY = "category";
-const std::string PASSWORD = "password";
-const std::string AUTH_TOKEN = "auth_token";
-const std::string KEY_SCHEMA = "key_schema";
-const std::string VALUE_SCHEMA = "value_schema";
-const std::string CLIENTS = "clients";
-const std::string CATEGORIES = "categories";
-const std::string NAME = "name";
+const string DATA_BUDDY_FOLDER = "data_buddy";
+const string APP_DB = "app_db";
+const string USER_DB = "user_db";
+const string CATEGORY = "category";
+const string PASSWORD = "password";
+const string AUTH_TOKEN = "auth_token";
+const string KEY_SCHEMA = "key_schema";
+const string VALUE_SCHEMA = "value_schema";
+const string CLIENTS = "clients";
+const string CATEGORIES = "categories";
+const string NAME = "name";
 
-const std::string CLIENT_KEY_SCHEMA = R"(
+const string CLIENT_KEY_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -56,7 +57,7 @@ const std::string CLIENT_KEY_SCHEMA = R"(
         }
     )"; // TODO you may want to incoporate std::format here so constants can be used
 
-const std::string CLIENT_VALUE_SCHEMA = R"(
+const string CLIENT_VALUE_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -70,7 +71,7 @@ const std::string CLIENT_VALUE_SCHEMA = R"(
         }
     )";
 
-const std::string CATEGORY_KEY_SCHEMA = R"(
+const string CATEGORY_KEY_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -81,7 +82,7 @@ const std::string CATEGORY_KEY_SCHEMA = R"(
         }
     )";
 
-const std::string CATEGORY_VALUE_SCHEMA = R"(
+const string CATEGORY_VALUE_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -96,7 +97,7 @@ const std::string CATEGORY_VALUE_SCHEMA = R"(
         }
     )";
 
-const std::string AUTH_TOKEN_KEY_SCHEMA = R"(
+const string AUTH_TOKEN_KEY_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -107,7 +108,7 @@ const std::string AUTH_TOKEN_KEY_SCHEMA = R"(
         }
     )";
 
-const std::string AUTH_TOKEN_VALUE_SCHEMA = R"(
+const string AUTH_TOKEN_VALUE_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -120,7 +121,7 @@ const std::string AUTH_TOKEN_VALUE_SCHEMA = R"(
 
 // Key schema to be used for all keys in the user database
 // The key object should be formatted as the key schema specified for the category?
-const std::string USER_KEY_SCHEMA = R"(
+const string USER_KEY_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -131,7 +132,7 @@ const std::string USER_KEY_SCHEMA = R"(
         }
     )";
 
-const std::string USER_VALUE_SCHEMA = R"(
+const string USER_VALUE_SCHEMA = R"(
         {
             "type": "object",
             "properties": {
@@ -148,20 +149,20 @@ const std::string USER_VALUE_SCHEMA = R"(
 //
 /////////////////////
 
-std::string vectorToJson(const std::vector<std::string>& strings);
+string vectorToJson(const std::vector<string>& strings);
 
-std::string build_client_key(const std::string& name);
+string build_client_key(const string& name);
 
-std::string build_client_value(const std::string& name, const std::string& password, const std::string& categories);
+string build_client_value(const string& name, const string& password, const string& categories);
 
-std::string build_category_key(const std::string& name);
+string build_category_key(const string& name);
 
-std::string build_category_value(const std::string& name, const std::string& key_schema, const std::string& value_schema, const std::vector<std::string>& clients);
+string build_category_value(const string& name, const string& key_schema, const string& value_schema, const std::vector<string>& clients);
 
-std::string build_auth_token_key(const std::string& name);
+string build_auth_token_key(const string& name);
 
-std::string build_auth_token_value(const std::string& name, const std::string& auth_token);
+string build_auth_token_value(const string& name, const string& auth_token);
 
-std::string generate_json_schema(const nlohmann::json& jsonObject);
+string generate_json_schema(const nlohmann::json& jsonObject);
 
 #endif /* Common_hpp */

@@ -51,27 +51,27 @@ public:
      * REQUIRES: string is formatted as json object
      * RETURNS: dictionary with key value pairs corresponding to the json object
     */
-    // Dictionary string_to_dictionary(String str);
+    // Dictionary string_to_dictionary(string str);
     
     /**
      * RETURNS: string formatted as json object
     */
-    // String dictionary_to_string(Dictionary dict);
+    // string dictionary_to_string(Dictionary dict);
 
     /**
      * RETURNS: true if the dictionary is valid for the given category, false if not 
     */
-    // bool is_dictionary_valid(Dictionary dict, String category);
+    // bool is_dictionary_valid(Dictionary dict, string category);
 
     // /**
     //  * RETURNS: true if the error string indicates success, false if not
     // */
-    // bool is_successful(String error);
+    // bool is_successful(string error);
 
     // /**
     //  * RETURNS: true if the error string indicates success, false if not
     // */
-    // bool is_successful(std::string error);
+    // bool is_successful(string error);
 
 
     /**
@@ -80,7 +80,7 @@ public:
      * RETURNS: response to be sent to client
      * REQUIRES: dto pointer must contain the error field
     */
-    Response create_response(const String& error, const oatpp::Void &dto);
+    Response create_response(const string& error, const oatpp::Void &dto);
 
     /**
      * RETURNS: true if data buddy is connected, false otherwise
@@ -92,25 +92,25 @@ public:
      * @param auth_token: authentication token for the client
      * RETURNS: true if the client is authorized, false otherwise
     */
-    bool is_client_authorized(const String& name, const String& auth_token, const String& category);
+    bool is_client_authorized(const string& name, const string& auth_token, const string& category);
 
     /**
      * @param category: name of the category to retreive values from
      * RETURNS: vector containing a string representing each key in the category value
     */
-    std::vector<std::string> get_category_values(const String& category);
+    std::vector<string> get_category_values(const string& category);
 
     /**
      * @param name: name of the client
      * RETURNS: true if the client exists, false otherwise
     */
-    bool does_client_exist(const String& name);
+    bool does_client_exist(const string& name);
 
     // overwrites existing category and corresponding client with new information. Will create new category if it doesn't exist
     // REQUIRES that the client is authorized to make this request
     // REQUIRSE: that the modified client exists
     // TODO: for safety may want to make all database puts transactional 
-    String update_category(const String& client_name, const String& category, const String& key_schema, const String& value_schema, const String& clients);
+    string update_category(const string& client_name, const string& category, const string& key_schema, const string& value_schema, const string& clients);
 
 
     ////////////////////////
@@ -132,7 +132,7 @@ public:
      * REQUIRES: key complies with category's key_schema 
     */
    // TODO: Modify this to include range based gets and such
-    String do_get(const String& name, const String& auth_token, const String& category, const String& key, const String& prefix_key, String& keys, String& values);
+    string do_get(const string& name, const string& auth_token, const string& category, const string& key, const string& prefix_key, string& keys, string& values);
 
     /**
      * @param name: name of the client
@@ -146,7 +146,7 @@ public:
      * REQUIRES: key complies with category's key_schema 
      * REQUIRES: value complies with category's value_schema
     */
-    String do_put(const String& name, String auth_token, const String& category, const String& key, const String& value);
+    string do_put(const string& name, string auth_token, const string& category, const string& key, const string& value);
 
     /**
      * @param path: absolute path to the location where the data buddy folder should be created
@@ -156,7 +156,7 @@ public:
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is not currently connected
     */
-    String do_create_buddy(const String& path, String& folder_path);
+    string do_create_buddy(const string& path, string& folder_path);
 
     /**
      * @param path: absolute path to the location of the data buddy folder
@@ -165,14 +165,14 @@ public:
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is not currently connected
     */
-    String do_connect_buddy(const String& path);
+    string do_connect_buddy(const string& path);
 
     /**
      * EFFECTS: disconnects from the data buddy folder
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: data buddy is currently connected
     */
-    String do_disconnect_buddy();
+    string do_disconnect_buddy();
 
     /**
      * @param name: name of the client
@@ -180,7 +180,7 @@ public:
      * EFFECTS: creates a new client in client database. Will populate auth_token if successful.
      * RETURNS: empty string if successful, error message if not
     */
-    String do_create_client(const String& name, const String& password, String& auth_token);
+    string do_create_client(const string& name, const string& password, string& auth_token);
 
     /**
      * @param name: name of the client
@@ -188,7 +188,7 @@ public:
      * EFFECTS: attempts to validate client by checking client database for the provided credentials. Will populate auth_token if successful
      * RETURNS: empty string if successful, error message if not
     */
-    String do_connect_client(const String& name, const String& password, String& auth_token);
+    string do_connect_client(const string& name, const string& password, string& auth_token);
 
     /**
      * @param client_name: name of the client requesting the add
@@ -199,7 +199,7 @@ public:
      * EFFECTS: allows the specified client to access the specified category
      * RETURNS: empty string if successful, error message if not
     */
-    String do_add_client(const String& client_name, const String& auth_token, const String& category, const String& add_name);
+    string do_add_client(const string& client_name, const string& auth_token, const string& category, const string& add_name);
 
     /**
      * @param client_name: name of the client requesting the creation
@@ -211,21 +211,21 @@ public:
      * EFFECTS: creates a new category in category column family. Creator will automatically be given access to the category
      * RETURNS: empty string if successful, error message if not
     */
-    String do_create_category(const String& name, const String& auth_token, const String& category_name, const String& key_schema, const String& value_schema);
+    string do_create_category(const string& name, const string& auth_token, const string& category_name, const string& key_schema, const string& value_schema);
 
     /**
      * @param clients: list of clients and their associated groups
      * @param client_schema: json schema needed to construct the client
      * RETURNS: empty string if successful, error message if not
     */
-    String do_list_clients(String& clients);
+    string do_list_clients(string& clients);
     
     /**
      * @param categories: list of categories containing their name, key_params, and value_params
      * @param category_schema: json schema needed to construct the categories object
      * RETURNS: empty string if successful, error message if not
     */
-    String do_list_categories(String& categories);
+    string do_list_categories(string& categories);
 
     ////////////////////////
     //
@@ -269,9 +269,9 @@ public:
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
         // Function Call
-        String keys;
-        String values;
-        String error = do_get(recv->name, recv->auth_token, recv->category, recv->key, recv->prefix_key, keys, values);
+        string keys;
+        string values;
+        string error = do_get(recv->name, recv->auth_token, recv->category, recv->key, recv->prefix_key, keys, values);
         
         // Respond
         auto dto = GetRespDto::createShared();
@@ -292,7 +292,7 @@ public:
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
         // Function Call
-        String error = do_put(recv->name, recv->auth_token, recv->category, recv->key, recv->value);
+        string error = do_put(recv->name, recv->auth_token, recv->category, recv->key, recv->value);
         
         // Respond
         auto dto = PutRespDto::createShared();
@@ -311,11 +311,11 @@ public:
         OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is required!");
         
         // Function Call
-        String folder_path;
-        String error = do_create_buddy(recv->path, folder_path);
+        string folder_path;
+        string error = do_create_buddy(recv->path, folder_path);
         
         // Respond
-        std::cout << "Error: " << (std::string)error << std::endl;
+        std::cout << "Error: " << (string)error << std::endl;
         auto dto = CreateBuddyRespDto::createShared();
         std::cout << "created response" << std::endl;
         dto->error = error;
@@ -335,7 +335,7 @@ public:
         OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is require!");
         
         // Function Call
-        String error = do_connect_buddy(recv->path);
+        string error = do_connect_buddy(recv->path);
         
         // Respond
         auto dto = ConnectBuddyRespDto::createShared();
@@ -349,7 +349,7 @@ public:
     }
     ENDPOINT("GET", "/db-disconnect-buddy", disconnect_buddy) {
         // Function Call
-        String error = do_disconnect_buddy();
+        string error = do_disconnect_buddy();
         
         // Respond
         auto dto = DisconnectBuddyRespDto::createShared();
@@ -369,8 +369,8 @@ public:
         OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
         // Function Call
-        String auth_token;
-        String error = do_create_client(recv->name, recv->password, auth_token);
+        string auth_token;
+        string error = do_create_client(recv->name, recv->password, auth_token);
         
         // Respond
         auto dto = CreateClientRespDto::createShared();
@@ -391,8 +391,8 @@ public:
         OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
         // Function Call
-        String auth_token;
-        String error = do_connect_client(recv->name, recv->password, auth_token);
+        string auth_token;
+        string error = do_connect_client(recv->name, recv->password, auth_token);
         
         // Respond
         auto dto = ConnectClientRespDto::createShared();
@@ -413,7 +413,7 @@ public:
         OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
         // Function Call
-        String error = do_add_client(recv->name, recv->auth_token, recv->category, recv->add_name);
+        string error = do_add_client(recv->name, recv->auth_token, recv->category, recv->add_name);
         
         // Respond
         auto dto = AddClientRespDto::createShared();
@@ -434,7 +434,7 @@ public:
         OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
         
         // Function Call
-        String error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
+        string error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
         
         // Respond
         auto dto = CreateCategoryRespDto::createShared();
@@ -448,8 +448,8 @@ public:
     }
     ENDPOINT("GET", "/db-list-clients", list_clients) {
         // Function Call
-        String clients;
-        String error = do_list_clients(clients);
+        string clients;
+        string error = do_list_clients(clients);
         
         // Respond
         auto dto = ListClientsRespDto::createShared();
@@ -464,8 +464,8 @@ public:
     }
     ENDPOINT("GET", "/db-list-categories", list_categories) {
         // Function Call
-        String categories;
-        String error = do_list_categories(categories);
+        string categories;
+        string error = do_list_categories(categories);
         
         // Respond
         auto dto = ListCategoriesRespDto::createShared();

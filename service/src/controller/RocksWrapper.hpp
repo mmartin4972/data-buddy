@@ -25,7 +25,7 @@ class RocksWrapper {
 
     public:
 
-    // static std::unordered_set<std::string> opened_paths; // THIS THING IS NOT THREAD SAFE!!
+    // static std::unordered_set<string> opened_paths; // THIS THING IS NOT THREAD SAFE!!
 
 
 
@@ -37,7 +37,7 @@ class RocksWrapper {
         // RocksWrapper::opened_paths.insert(this->path.string());
     }
 
-    bool does_json_conform_schema(const std::string& schema, const std::string& data) {
+    bool does_json_conform_schema(const string& schema, const string& data) {
         json_schema_validator validator;
         validator.set_root_schema(json::parse(schema));
         return validator.validate(json::parse(data));
@@ -59,7 +59,7 @@ class RocksWrapper {
      * @param path: The path to where the database is located
      * @return: A RocksWrapper object that wraps the database
     */
-    static RocksWrapper_ptr open_db(std::string path) {
+    static RocksWrapper_ptr open_db(string path) {
         RocksWrapper_ptr rocks_wrapper = std::make_shared<RocksWrapper>(fs::path(path)); // Should throw error if the path is invalid TODO: check this
         rocksdb::Options options;
         options.create_if_missing = true;
@@ -76,7 +76,7 @@ class RocksWrapper {
      * @param path: The path to the folder to create the database at
      * @return: A RocksWrapper object that wraps the database
     */
-    static RocksWrapper_ptr create_db(std::string path, std::string name) {
+    static RocksWrapper_ptr create_db(string path, string name) {
         fs::path new_path = fs::path(path) / fs::path(name); 
         RocksWrapper_ptr rocks_wrapper = std::make_shared<RocksWrapper>(new_path);
         rocksdb::Options options;
@@ -98,10 +98,10 @@ class RocksWrapper {
      * REQUIRES: The key is less than max_key_size
      * EFFECTS: Throws an error if the requested key does not exist
     */
-    std::string get(const std::string& key_schema, const std::string& key, const std::string& prefix_key, std::string& keys, std::string& values) {
-        std::string error = "";
-        std::vector<std::string> keys_vec;
-        std::vector<std::string> values_vec;
+    string get(const string& key_schema, const string& key, const string& prefix_key, string& keys, string& values) {
+        string error = "";
+        std::vector<string> keys_vec;
+        std::vector<string> values_vec;
         
         // Check key size
         if (key.size() > max_key_size) {
@@ -110,7 +110,7 @@ class RocksWrapper {
             error = "The given key does not conform to the given schema";
         } else {
             if (prefix_key.empty()) { // If we are not searching by prefix
-                std::string value;
+                string value;
                 rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &value);
                 keys_vec.push_back(key);
                 values_vec.push_back(value);
@@ -118,7 +118,7 @@ class RocksWrapper {
                     error = status.ToString();
                 }
             } else { // If we are searching by prefix
-                std::string prefix = key.substr(0, key.find(prefix_key));
+                string prefix = key.substr(0, key.find(prefix_key));
                 // TODO: do we need to check that prefix_key exists?
                 auto iter = db->NewIterator(rocksdb::ReadOptions());
                 for (iter->Seek(prefix); iter->Valid() && iter->key().starts_with(prefix); iter->Next()) {
@@ -148,8 +148,8 @@ class RocksWrapper {
      * REQUIRES: The value is less than max_value_size
     */
    // TODO: you may want to consider throwing an error instead of returning a string?
-    std::string put(const std::string& key_schema, const std::string& key, const std::string& value_schema, const std::string& value) {
-        std::string error = "";
+    string put(const string& key_schema, const string& key, const string& value_schema, const string& value) {
+        string error = "";
         if (key.size() > max_key_size) {
             error = "The given key is too large";
         } else if (value.size() > max_value_size) {
@@ -185,7 +185,7 @@ class RocksWrapper {
         delete db;
     }
 
-    std::string get_path_str() {
+    string get_path_str() {
         return path.string();
     }
 };
