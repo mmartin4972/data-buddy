@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 set(project_name data-buddy) ## rename your project here
 project(${project_name})
 set(CMAKE_CXX_STANDARD 17)

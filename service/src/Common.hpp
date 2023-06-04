@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json-schema.hpp>
+#include <iostream>
 
 #include "oatpp/core/Types.hpp"
 #include "oatpp/web/server/api/ApiController.hpp"

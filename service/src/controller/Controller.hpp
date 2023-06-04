@@ -315,9 +315,12 @@ public:
         String error = do_create_buddy(recv->path, folder_path);
         
         // Respond
+        std::cout << "Error: " << (std::string)error << std::endl;
         auto dto = CreateBuddyRespDto::createShared();
+        std::cout << "created response" << std::endl;
         dto->error = error;
         dto->folder_path = folder_path;
+        std::cout << "dto populated" << std::endl;
         return create_response(error, dto);
     }
 

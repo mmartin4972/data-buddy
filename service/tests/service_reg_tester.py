@@ -6,6 +6,8 @@ import os
 import signal
 import traceback
 import shutil
+import sys
+import pdb
 
 # Helper Functions
 def kill_process_and_children(pid):
@@ -39,6 +41,7 @@ def check_create_buddy_and_disconnect_success(path):
     }
     res = requests.post('http://localhost:8787/db-create-buddy', json=data)
     assert (res.status_code == 200)
+    print("got response")
     body = res.json()
     assert(body['error'] == "")
     assert(body['folder_path'] == (path + '/data_buddy'))
@@ -48,6 +51,7 @@ def check_create_buddy_and_disconnect_success(path):
     
     # Disconnect and clean up
     res = requests.get('http://localhost:8787/db-disconnect-buddy')
+    print("disconnected")
     assert(res.status_code == 200)
 
 # Check Create Buddy Endpoint Error (Invalid Path) and Disconnect close not opened
@@ -136,50 +140,57 @@ def connect_buddy_endpoint_error_invalid_path(path) :
     # post_response = requests.post('http://localhost:8787/db-get', json=data)
     # print(post_response.text)
 
+test = ""
+if len(sys.argv) > 1:
+    test = sys.argv[1]   
+
 # Build the service
-command = "cd /data-buddy/service/build; make"
-process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-output, error = process.communicate()
-error_code = process.returncode
-
-if error_code == 0:
-    print("Build Successful")
-else:
-    print("Build Failed")
-    print("Error code:", error_code)
-    print("Output:")
-    print(output.decode())
-    print("Error:")
-    print(error.decode())
-    exit()
-
 process = None
+if test == "": # don't recompile if a specific test is being checked
+    command = "cd /data-buddy/service/build; make"
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = process.communicate()
+    error_code = process.returncode
+
+    if error_code == 0:
+        print("Build Successful")
+    else:
+        print("Build Failed")
+        print("Error code:", error_code)
+        print("Output:")
+        print(output.decode())
+        print("Error:")
+        print(error.decode())
+        exit()
+
+    process = None
 
 func_list = [test_endpoint_1, 
-             test_endpoint_2, 
-             check_create_buddy_and_disconnect_success, 
-             create_buddy_endpoint_error_invalid_path, 
-             connect_endpoint_success, 
-             connect_endpoint_error_already_connected,
-             connect_buddy_endpoint_error_invalid_path
+            test_endpoint_2, 
+            check_create_buddy_and_disconnect_success, 
+            create_buddy_endpoint_error_invalid_path, 
+            connect_endpoint_success, 
+            connect_endpoint_error_already_connected,
+            connect_buddy_endpoint_error_invalid_path
             ]
 try:
 # Run the service
-    command = "/data-buddy/service/build/data-buddy-exe"
-    process = subprocess.Popen(command, shell=True)
-    time.sleep(0.5)
+    if test == "": # Don't run the service if a specific test is being checked
+        command = "/data-buddy/service/build/data-buddy-exe"
+        process = subprocess.Popen(command, shell=True)
+        time.sleep(0.5)
 
+# Run the tests
     path = "/testing"
     if (os.path.isdir(path)):
         shutil.rmtree(path)
-    
     for func in func_list:
-        os.mkdir(path)
-        func(path)
-        shutil.rmtree(path)
-
-    # os.mkdir(path)
-    # connect_endpoint_error_already_connected(path)
+        if (test == "" or func.__name__ == test):
+            print(func.__name__)
+            os.mkdir(path)
+            func(path)
+            shutil.rmtree(path)
+            print("Passed")
     
     print ("All tests passed!")
     
@@ -191,5 +202,6 @@ except:
     traceback.print_exc()
     print("Something really went wrong")
     
-# shutil.rmtree(path) 
-kill_process_and_children(process.pid)
+# shutil.rmtree(path)
+if process != None:
+    kill_process_and_children(process.pid)

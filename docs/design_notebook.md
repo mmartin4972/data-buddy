@@ -378,4 +378,4 @@ TODO:
 
 6/3/23
 - I was considering returning the schema of the response in the response message, but I think this is overkill. All of my responses will be json objects and can be parsed as such. I will need online API endpoint documentation and should generate it by looking at the DTOs.hpp file, and should consider doing other code generation maneuvers for my endpoint, but not at this time. That documentation will come later.
-- 
+- I think your github credentials may be stored in your container, which you have publicly hosted on DockerHub. I would recommend making sure that this is not the case.

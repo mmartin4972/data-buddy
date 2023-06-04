@@ -65,6 +65,8 @@ Response Controller::create_response(const String& error, const oatpp::Void &dto
     } else {
         res = createDtoResponse(Status::CODE_500, dto);
     }
+    // NIce
+    std::cout <<"Response cbompletely created and returning" << std::endl;
     return res;
 }
 
@@ -294,6 +296,7 @@ String Controller::do_create_buddy(const String& path, String& folder_path) {
     options.create_if_missing = true;
     fs::path p(path);
     p.append(DATA_BUDDY_FOLDER);
+    std::cout << "Entering the try statement" << std::endl;
     try {
         if (is_buddy_connected()) {
             throw std::runtime_error("Buddy path is already connected");
