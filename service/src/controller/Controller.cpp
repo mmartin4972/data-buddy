@@ -159,33 +159,38 @@ T json_at(json obj, const string& key) {
 
 // Returns true if the client is authorized, else false
 // TODO: may want to perform some sort of caching so not doing 2 gets for every request which needs authorization
-bool Controller::is_client_authorized(const string& name, const string& auth_token, const string& category)  {
+bool Controller::is_client_authorized(const string& name, const string& auth_token)  {
     string auth_key = build_auth_token_key(name);
     string provided_auth_token = build_auth_token_value(name, auth_token);
     string tmp, val;
     string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, auth_key, "", tmp, val);
 
-    // If category is not empty perform the category check to make sure the client has access to this category
-    bool client_in_category = false;
-    if (category != "") { 
-        try {
-            std::vector<string> vals = get_category_values(category);
-            json client_array = json::parse(vals[2]); // TODO: don't do random indexing here please. Use enums.
-            for (auto& client : client_array) {
-                if (client.get<string>() == (string)name) {
-                    client_in_category = true;
-                    break;
-                }
+    return is_successful(error) && json_at<string>(json::parse(val)[0], AUTH_TOKEN) == provided_auth_token;
+}
+
+bool Controller::is_client_authorized_for_category(const string& name, const string& auth_token, const string& category) {
+    string error = "";
+    bool is_client_in_category = false;
+    try {
+        // Check that the client is authorized
+        if (!is_client_authorized(name, auth_token)) {
+            throw std::runtime_error("Client is not authorized");
+        }
+
+        // Perform the category check to make sure the client has access to this category
+        std::vector<string> vals = get_category_values(category);
+        json client_array = json::parse(vals[2]); // TODO: don't do random indexing here please. Use enums.
+        for (auto& client : client_array) {
+            if (client.get<string>() == (string)name) {
+                is_client_in_category = true;
+                break;
             }
         }
-        catch (const std::exception& e) {
-            error = e.what();
-        }
-    } else {
-        client_in_category = true;
     }
-
-    return is_successful(error) && json_at<string>(json::parse(val)[0], AUTH_TOKEN) == provided_auth_token && client_in_category;
+    catch (const std::exception& e) {
+        error = e.what();
+    }
+    return is_successful(error) && is_client_in_category;
 }
 
 // Returns true if client is registered, else false
@@ -255,7 +260,7 @@ string Controller::update_category(const string& client_name, const string& cate
 string Controller::do_get(const string& name, const string& auth_token, const string& category, const string& key, const string& prefix_key, string& keys, string& values) {
     string error = "";
     try {
-        if (!is_client_authorized(name, auth_token, category)) {
+        if (!is_client_authorized_for_category(name, auth_token, category)) {
             throw std::runtime_error("Client is not authorized");
         }
         std::vector<string> category_vals = get_category_values(category);
@@ -273,7 +278,7 @@ string Controller::do_get(const string& name, const string& auth_token, const st
 string Controller::do_put(const string& name, string auth_token, const string& category, const string& key, const string& value) {
     string error = "";
     try {
-        if (!is_client_authorized(name, auth_token, category)) {
+        if (!is_client_authorized_for_category(name, auth_token, category)) {
             throw std::runtime_error("Client is not authorized");
         }
         std::vector<string> category_vals = get_category_values(category);
@@ -400,6 +405,22 @@ string Controller::do_create_client(const string& name, const string& password, 
     return error;
 }
 
+string Controller::do_delete_client(const string& name, const string& auth_token) {
+    string error = "";
+    try {
+        if (!is_client_authorized(name, auth_token)) { // Check the client is authorized to make this request
+            throw std::runtime_error("Client is not authorized");
+        }
+        string auth_key = build_auth_token_key(name);
+        check_successful(app_db->del(AUTH_TOKEN_KEY_SCHEMA, auth_key));
+    }
+    catch (const std::runtime_error& e) {
+        error += e.what();
+    }
+    return error;
+}
+
+
 // Read the secret key from the environment variable
 // Use the client's name to then generate them an authentication token
 // Store the authentication token in the app database
@@ -435,7 +456,7 @@ string Controller::do_add_client(const string& client_name, const string& auth_t
     string error = "";
     try {
         // Validation Checks
-        if (!is_client_authorized(client_name, auth_token, category)) { // Check the client is authorized to make this request
+        if (!is_client_authorized_for_category(client_name, auth_token, category)) { // Check the client is authorized to make this request
             throw std::runtime_error("Client is not authorized");
         }
         if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category))) { // check that the category exists
@@ -462,7 +483,7 @@ string Controller::do_add_client(const string& client_name, const string& auth_t
 string Controller::do_create_category(const string& client_name, const string& auth_token, const string& category_name, const string& key_schema, const string& value_schema) {
     string error = "";
     try {
-        if (!is_client_authorized(client_name, auth_token, "")) { // Check the client is authorized to make this request
+        if (!is_client_authorized(client_name, auth_token)) { // Check the client is authorized to make this request
             throw std::runtime_error("Client is not authorized");
         }
         if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category_name))) { // Check category doesn't already exist
@@ -519,16 +540,3 @@ string Controller::do_list_categories(string& categories) {
     }
     return error;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

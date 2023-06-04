@@ -168,6 +168,28 @@ class RocksWrapper {
     }
 
     /**
+     * Deletes the given key-value pair from the database
+     * @param key The key to delete from the database
+     * @param key_schema: The json schema that the key must conform to
+     * @return An empty string if the delete was successful, otherwise an error message
+     * REQUIRES: The key is less than max_key_size
+    */
+    string del(const string& key_schema, const string& key) {
+        string error = "";
+        if (key.size() > max_key_size) {
+            error = "The given key is too large";
+        } else if (!does_json_conform_schema(key_schema, key)) {
+            error = "The given key does not conform to the given schema";
+        } else {
+            rocksdb::Status status = db->Delete(rocksdb::WriteOptions(), key);
+            if (!status.ok()) {
+                error += status.ToString();
+            }
+        }
+        return error;
+    }
+
+    /**
      * Indicates if the wrapper is connected to the database i.e. has a valid database pointer
      * @return True if the wrapper is connected to the database, false otherwise
     */

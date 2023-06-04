@@ -5,3 +5,5 @@ service/oatpp/
 service/build
 service/json-3.11.2
 service/json-schema-validator
+service/third_party
+

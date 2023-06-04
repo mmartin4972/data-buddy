@@ -92,7 +92,16 @@ public:
      * @param auth_token: authentication token for the client
      * RETURNS: true if the client is authorized, false otherwise
     */
-    bool is_client_authorized(const string& name, const string& auth_token, const string& category);
+    bool is_client_authorized(const string& name, const string& auth_token);
+
+    /**
+     * @param name: name of the client
+     * @param auth_token: authentication token for the client
+     * @param category: name of the category to check authorization for
+     * RETURNS: true if the client is authorized and they are authorized for the category, false otherwise
+    */
+    bool is_client_authorized_for_category(const string& name, const string& auth_token, const string& category);
+
 
     /**
      * @param category: name of the category to retreive values from
@@ -181,6 +190,14 @@ public:
      * RETURNS: empty string if successful, error message if not
     */
     string do_create_client(const string& name, const string& password, string& auth_token);
+
+    /**
+     * @param name: name of the client
+     * @param auth_token: authentication token for the client
+     * EFFECTS: deletes the client from the client database
+     * RETURNS: empty string if successful, error message if not
+    */
+    string do_delete_client(const string& name, const string& auth_token);
 
     /**
      * @param name: name of the client
@@ -379,6 +396,26 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
+    ENDPOINT_INFO(delete_client) {
+        info->summary = "Delete an existing client";
+        info->addConsumes<Object<DeleteClientRecvDto>>("application/json");
+        info->addResponse<Object<DeleteClientRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-delete-client", delete_client,
+            BODY_DTO(Object<DeleteClientRecvDto>, recv)) {
+        // Formatting Checks
+        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+        
+        // Function Call
+        string error = do_delete_client(recv->name, recv->auth_token);
+        
+        // Respond
+        auto dto = DeleteClientRespDto::createShared();
+        dto->error = error;
+        return createDtoResponse(Status::CODE_200, dto);
+    }
+
     ENDPOINT_INFO(connect_client) {
         info->summary = "Connect to an existing client";
         info->addConsumes<Object<ConnectClientRecvDto>>("application/json");
@@ -402,7 +439,7 @@ public:
     }
 
     ENDPOINT_INFO(add_client) {
-        info->summary = "Add a client to a group";
+        info->summary = "Add a client to a category";
         info->addConsumes<Object<AddClientRecvDto>>("application/json");
         info->addResponse<Object<AddClientRespDto>>(Status::CODE_200, "application/json");
     }
