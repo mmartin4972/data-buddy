@@ -1,6 +1,7 @@
 docs/~*
-boost_1_82_0/
-rocksdb/
-wt-4.9.2/
-oatpp/
+service/boost_1_82_0/
+service/rocksdb/
+service/oatpp/
 service/build
+service/json-3.11.2
+service/json-schema-validator

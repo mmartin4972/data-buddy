@@ -1,28 +1,48 @@
-#ifndef Common_hpp
-#define Common_hpp
-
 #include <unordered_map>
 #include <string>
-#include <filesystem>
 
-#include "controller/Controller.hpp"
+#include <boost/filesystem.hpp> // TODO: may want to change this to filesystem for c++17 and compile with -lstdc++fs
+#include <filesystem>
+#include <nlohmann/json.hpp>
+#include <nlohmann/json-schema.hpp>
 
 #include "oatpp/core/Types.hpp"
 #include "oatpp/web/server/api/ApiController.hpp"
 
-// using Dictionary = std::unordered_map<std::string, std::string>;
-using String = oatpp::data::mapping::type::String;
-// using StringVector = oatpp::data::mapping::type::Vector<String>;
-using Response = std::shared_ptr<oatpp::web::server::api::ApiController::OutgoingResponse>;
-// using StringVecVecVec = oatpp::data::mapping::type::Vector<oatpp::data::mapping::type::Vector<StringVector>>;
-using RocksWrapper_ptr = std::shared_ptr<RocksWrapper>;
+#ifndef Common_hpp
+#define Common_hpp
 
+//////////////////////
+//
+// ALIAS DEFINITIONS
+//
+//////////////////////
+using String = oatpp::data::mapping::type::String;
+using Response = std::shared_ptr<oatpp::web::server::api::ApiController::OutgoingResponse>;
+namespace fs = std::filesystem;
+class RocksWrapper;
+using RocksWrapper_ptr = std::shared_ptr<RocksWrapper>;
+using json_schema_validator = nlohmann::json_schema::json_validator;
+using json = nlohmann::json;
+
+//////////////////////
+//
+// CONSTANTS
+//
+/////////////////////
+#define ROCKSDB_MAX_KEY_SIZE 1024
+#define ROCKSDB_MAX_VALUE_SIZE 65535
 const std::string DATA_BUDDY_FOLDER = "data_buddy";
 const std::string APP_DB = "app_db";
 const std::string USER_DB = "user_db";
 const std::string CATEGORY = "category";
 const std::string PASSWORD = "password";
 const std::string AUTH_TOKEN = "auth_token";
+const std::string KEY_SCHEMA = "key_schema";
+const std::string VALUE_SCHEMA = "value_schema";
+const std::string CLIENTS = "clients";
+const std::string CATEGORIES = "categories";
+const std::string NAME = "name";
 
 const std::string CLIENT_KEY_SCHEMA = R"(
         {
@@ -97,88 +117,50 @@ const std::string AUTH_TOKEN_VALUE_SCHEMA = R"(
         }
     )";
 
-std::string vectorToJson(const std::vector<std::string>& strings) {
-    json jsonStrings = json(strings);
-    return jsonStrings.dump();
-}
-
-std::string build_client_key(const std::string& name) {
-    std::string key = R"({"category":"client","name":")" + name + "\"}";
-    return key;
-}
-
-std::string build_client_value(const std::string& name, const std::string& password, const std::vector<std::string>& categories) {
-    std::string value = R"({"name":")" + name + R"(","password":")" + password + R"(","categories":)" + vectorToJson(categories) + "}";
-    return value
-}
-
-std::string build_category_key(const std::string& name) {
-    std::string key = R"({"category":"category","name":")" + name + "\"}";
-    return key;
-}
-
-std::string build_category_value(const std::string& name, const std::string& key_schema, const std::string& value_schema, const std::vector<std::string>& clients) {
-    std::string value = R"({"name":)" + name + R"(,"key_schema":)" + key_schema + R"(,"value_schema":)" + value_schema + R"(,"clients":)" + vectorToJson(clients) + "}";
-    return value;
-}
-
-std::string build_auth_token_key(const std::string& name) {
-    std::string key = R"({"category":"auth_token","name":")" + name + "\"}";
-    return key;
-}
-
-std::string build_auth_token_value(const std::string& name, const std::string& auth_token) {
-    std::string value = R"({"name":)" + name + R"(","auth_token":")" + auth_token + "\"}";
-    return value;
-}
-
-std::string generate_json_schema(const json& jsonObject) {
-    json jsonSchema = json::object();
-    for (auto it = jsonObject.begin(); it != jsonObject.end(); ++it) {
-        const std::string& key = it.key();
-        const json& value = it.value();
-        
-        if (value.is_structured()) {
-            jsonSchema[key] = generateJsonSchema(value);
-        } else {
-            jsonSchema[key] = value.type_name();
+// Key schema to be used for all keys in the user database
+// The key object should be formatted as the key schema specified for the category?
+const std::string USER_KEY_SCHEMA = R"(
+        {
+            "type": "object",
+            "properties": {
+                "category": { "type": "string"},
+                "key": { "type": "object" },
+            },
+            "required": ["category", "key"]
         }
-    }
+    )";
 
-    return jsonSchema.dump();
-}
+const std::string USER_VALUE_SCHEMA = R"(
+        {
+            "type": "object",
+            "properties": {
+                "key": { "type": "object" },
+                "value": { "type": "object" },
+            },
+            "required": ["key","value"]
+        }
+    )";
 
-using fs = std::filesystem;
+//////////////////////
+//
+// HELPER FUNCTIONS
+//
+/////////////////////
 
-namespace Common {
+std::string vectorToJson(const std::vector<std::string>& strings);
 
-#define ROCKSDB_MAX_KEY_SIZE 1024
-#define ROCKSDB_MAX_VALUE_SIZE 65535
+std::string build_client_key(const std::string& name);
 
-// Dictionary string_to_dictionary(String string) {
-//     Dictionary dict;
-//     std::string jsonString = (std::string)string;
-//     json jsonData = json::parse(jsonString);
+std::string build_client_value(const std::string& name, const std::string& password, const std::string& categories);
 
-//     for (json::iterator it = jsonData.begin(); it != jsonData.end(); ++it) {
-//         if (it.value().is_string()) {
-//             dict[it.key()] = it.value().get<std::string>();
-//         }
-//     }
+std::string build_category_key(const std::string& name);
 
-//     return dict;
-// }
+std::string build_category_value(const std::string& name, const std::string& key_schema, const std::string& value_schema, const std::vector<std::string>& clients);
 
-// String dictionary_to_string(Dictionary dict) {
-//     json jsonMap;
+std::string build_auth_token_key(const std::string& name);
 
-//     for (const auto& pair : dict) {
-//         jsonMap[pair.first] = pair.second;
-//     }
+std::string build_auth_token_value(const std::string& name, const std::string& auth_token);
 
-//     return jsonMap.dump();
-// }
-
-}
+std::string generate_json_schema(const nlohmann::json& jsonObject);
 
 #endif /* Common_hpp */

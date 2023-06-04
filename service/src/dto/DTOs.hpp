@@ -29,11 +29,13 @@ class GetRecvDto : public oatpp::DTO {
   DTO_FIELD(String, name);
   DTO_FIELD(String, auth_token);
   DTO_FIELD(String, category);
-  DTO_FIELD(String, key); // JSON object parsed according to key_schema
+  DTO_FIELD(String, key); // JSON object parsed according to key schema associated with given category
+  DTO_FIELD(String, prefix_key); // string which specifies which values in keys to use for range get
 };
 class GetRespDto : public oatpp::DTO {
   DTO_INIT(GetRespDto, DTO);
-  DTO_FIELD(StringVector, values); // JSON object which will be parsed by client
+  DTO_FIELD(String, keys); // list of keys corresponding to queried values
+  DTO_FIELD(String, values); // JSON object which will be parsed by client
   DTO_FIELD(String, error);
 };
 
@@ -42,8 +44,8 @@ class PutRecvDto : public oatpp::DTO {
   DTO_FIELD(String, name);
   DTO_FIELD(String, auth_token);
   DTO_FIELD(String, category);
-  DTO_FIELD(String, key); // JSON object parsed according to key_schema
-  DTO_FIELD(String, value); // JSON object parsed according to value_schema
+  DTO_FIELD(String, key); // JSON object parsed according to key_schema associated with category
+  DTO_FIELD(String, value); // JSON object parsed according to value_schema associated with category
 };
 class PutRespDto : public oatpp::DTO {
   DTO_INIT(PutRespDto, DTO);
@@ -98,9 +100,10 @@ class ConnectClientRespDto : public oatpp::DTO {
 
 class AddClientRecvDto : public oatpp::DTO {
     DTO_INIT(AddClientRecvDto, DTO);
+    DTO_FIELD(String, name);
     DTO_FIELD(String, auth_token);
     DTO_FIELD(String, category);
-    DTO_FIELD(String, name);
+    DTO_FIELD(String, add_name);
 };
 class AddClientRespDto : public oatpp::DTO {
     DTO_INIT(AddClientRespDto, DTO);
@@ -110,6 +113,8 @@ class AddClientRespDto : public oatpp::DTO {
 class CreateCategoryRecvDto : public oatpp::DTO {
     DTO_INIT(CreateCategoryRecvDto, DTO);
     DTO_FIELD(String, name);
+    DTO_FIELD(String, auth_token);
+    DTO_FIELD(String, category_name);
     DTO_FIELD(String, key_schema);
     DTO_FIELD(String, value_schema);
 };
@@ -122,14 +127,14 @@ class ListClientsRespDto : public oatpp::DTO {
     DTO_INIT(ListClientsRespDto, DTO);
     DTO_FIELD(String, error);
     DTO_FIELD(String, clients);
-    DTO_FIELD(String, client_schema);
+    // DTO_FIELD(String, client_schema); Don't think this is necessary since return all responses as json values
 };
 
 class ListCategoriesRespDto : public oatpp::DTO {
     DTO_INIT(ListCategoriesRespDto, DTO);
     DTO_FIELD(String, error);
     DTO_FIELD(String, categories);
-    DTO_FIELD(String, category_schema);
+    // DTO_FIELD(String, category_schema); Don't think necessary since return all as json values
 };
 
 #include OATPP_CODEGEN_END(DTO)

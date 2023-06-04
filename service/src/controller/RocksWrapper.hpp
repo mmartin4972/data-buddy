@@ -1,3 +1,4 @@
+
 #include <unordered_set>
 #include <memory>
 
@@ -6,36 +7,42 @@
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
 
-#include <nlohmann/json.hpp>
-#include <json-schema-validator/validator.hpp>
+#ifndef RocksWrapper_hpp
+#define RocksWrapper_hpp
 
 /**
  * Wrapper class that wraps the RocksDB, so that we can constrain the 
  * way in which values are read and written to the database.
  * EFFECT: All values will be stored as json strings
  * EFFECT: All keys will be of the form: category:<identifier>
+ * NOTE: This class is not thread safe
 */
 class RocksWrapper {
-    private:
-    static unordered_set<fs::path> opened_paths;
     rocksdb::DB* db;
     fs::path path;
-    const unsigned int max_key_size = Common::ROCKSDB_MAX_KEY_SIZE;
-    const unsigned int max_value_size = Common::ROCKSDB_MAX_VALUE_SIZE;
+    const unsigned int max_key_size = ROCKSDB_MAX_KEY_SIZE;
+    const unsigned int max_value_size = ROCKSDB_MAX_VALUE_SIZE;
 
-    RocksWrapper(fs::path path) {
+    public:
+
+    // static std::unordered_set<std::string> opened_paths; // THIS THING IS NOT THREAD SAFE!!
+
+
+
+    RocksWrapper(fs::path path) { // TODO: issue with this being private and being constructed by shared_ptr. Please make private again and resolve.
         if (is_path_opened(path)) {
             throw std::invalid_argument("The given path is already opened");
         };
         this->path = path;
-        opened_paths.insert(this->path);
+        // RocksWrapper::opened_paths.insert(this->path.string());
     }
 
     bool does_json_conform_schema(const std::string& schema, const std::string& data) {
-        return json_schema_validator::validate(json::parse(schema), json::parse(data));
+        json_schema_validator validator;
+        validator.set_root_schema(json::parse(schema));
+        return validator.validate(json::parse(data));
     }
 
-    public:
 
     /**
      * Indicates if the given path is already connected to a database
@@ -43,7 +50,8 @@ class RocksWrapper {
      * @return: True if the path is already connected to a database, false otherwise
     */
     static bool is_path_opened(fs::path path) {
-        return paths.find(path) != paths.end();
+        // return opened_paths.find(path.string()) != opened_paths.end();
+        return false;
     }
 
     /**
@@ -51,11 +59,11 @@ class RocksWrapper {
      * @param path: The path to where the database is located
      * @return: A RocksWrapper object that wraps the database
     */
-    static Common::RocksWrapper_ptr open_db(std::string path) {
-        Common::RocksWrapper_ptr rocks_wrapper = std::make_shared<RocksWrapper>(fs::path(path)); // Should throw error if the path is invalid TODO: check this
+    static RocksWrapper_ptr open_db(std::string path) {
+        RocksWrapper_ptr rocks_wrapper = std::make_shared<RocksWrapper>(fs::path(path)); // Should throw error if the path is invalid TODO: check this
         rocksdb::Options options;
         options.create_if_missing = true;
-        rocksdb::Status status = rocksdb::DB::Open(options, rocks_wrapper.get_path_str(), &rocks_wrapper.db);
+        rocksdb::Status status = rocksdb::DB::Open(options, rocks_wrapper->get_path_str(), &(rocks_wrapper->db));
         if (!status.ok()) {
             // When rocks_wrapper is destroyed it should remove from opened_paths? TODO: check this
             throw std::runtime_error("Could not open database at path: " + path);
@@ -68,12 +76,12 @@ class RocksWrapper {
      * @param path: The path to the folder to create the database at
      * @return: A RocksWrapper object that wraps the database
     */
-    static Common::RocksWrapper_ptr create_db(std::string path, std::string name) {
+    static RocksWrapper_ptr create_db(std::string path, std::string name) {
         fs::path new_path = fs::path(path) / fs::path(name); 
-        Common::RocksWrapper_ptr rocks_wrapper = std::make_shared<RocksWrapper>(new_path);
+        RocksWrapper_ptr rocks_wrapper = std::make_shared<RocksWrapper>(new_path);
         rocksdb::Options options;
         options.create_if_missing = true;
-        rocksdb::Status status = rocksdb::DB::Open(options, rocks_wrapper.get_path_str(), &rocks_wrapper.db);
+        rocksdb::Status status = rocksdb::DB::Open(options, rocks_wrapper->get_path_str(), &(rocks_wrapper->db));
         if (!status.ok()) {
             throw std::runtime_error("Could not create database at path: " + path);
         }
@@ -90,8 +98,10 @@ class RocksWrapper {
      * REQUIRES: The key is less than max_key_size
      * EFFECTS: Throws an error if the requested key does not exist
     */
-    std::string get(const std::string& key_schema, const std::string& key, const std::string& prefix_key, std::vector<std::string>& values) {
+    std::string get(const std::string& key_schema, const std::string& key, const std::string& prefix_key, std::string& keys, std::string& values) {
         std::string error = "";
+        std::vector<std::string> keys_vec;
+        std::vector<std::string> values_vec;
         
         // Check key size
         if (key.size() > max_key_size) {
@@ -102,21 +112,27 @@ class RocksWrapper {
             if (prefix_key.empty()) { // If we are not searching by prefix
                 std::string value;
                 rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &value);
-                values.push_back(value);
+                keys_vec.push_back(key);
+                values_vec.push_back(value);
                 if (!status.ok()) { // Check get Status
                     error = status.ToString();
                 }
             } else { // If we are searching by prefix
                 std::string prefix = key.substr(0, key.find(prefix_key));
                 // TODO: do we need to check that prefix_key exists?
-                auto iter = DB::NewIterator(ReadOptions());
-                for (iter.Seek(prefix); iter.Valid() && iter.key().starts_with(prefix); iter.Next()) {
-                    values.push_back(iter.value().ToString());
+                auto iter = db->NewIterator(rocksdb::ReadOptions());
+                for (iter->Seek(prefix); iter->Valid() && iter->key().starts_with(prefix); iter->Next()) {
+                    keys_vec.push_back(iter->key().ToString());
+                    values_vec.push_back(iter->value().ToString());
                 }
             }
-            if (values.empty()) {
+            if (values_vec.empty()) {
                 error = "The given key does not exist";
             }
+            json jsonArray_keys(keys_vec);
+            keys = jsonArray_keys.dump();
+            json jsonArray_vals(values_vec);
+            values = jsonArray_vals.dump();
         }
         return error;
     }
@@ -165,11 +181,13 @@ class RocksWrapper {
      * NOTE: we don't want to make this private as then we wouldn't be able to call it from user code
     */
     ~RocksWrapper() {
-        opened_paths.erase(path);
+        // opened_paths.erase(path.string());
         delete db;
     }
 
     std::string get_path_str() {
         return path.string();
     }
-}
+};
+
+#endif // RocksWrapper_hpp

@@ -3,11 +3,10 @@
 #include <string>
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
-#include <nlohmann/json.hpp>
 #include <filesystem>
-
-using json = nlohmann::json;
-namespace fs = std::filesystem;
+#include <openssl/aes.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
 
 ////////////////////////
 //
@@ -51,15 +50,11 @@ int Controller::db_test() {
     return 0;
 }
 
-bool Controller::is_dictionary_valid(Dictionary dict, String category) {
-    return true;
-}
-
-bool Controller::is_successful(String error) {
+bool is_successful(String error) {
     return is_successful((std::string)error);
 }
 
-bool Controller::is_successful(std::string error) {
+bool is_successful(std::string error) {
     return error == "";
 }
 
@@ -85,66 +80,73 @@ bool Controller::is_buddy_connected() {
 }
 
 std::string encrypt_string(const std::string& key, const std::string& plaintext) {
-  // Get the size of the key.
-  size_t key_size = EVP_BytesToKey(EVP_aes_256_cbc(), NULL, key.c_str(), key.length(), 1, NULL, NULL);
+    // Check if the key length is valid for AES-256 (32 bytes)
+    if (key.length() != 32) {
+        throw std::invalid_argument("Invalid key length. Key must be 32 bytes for AES-256.");
+    }
 
-  // Create an AES cipher object.
-  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    // Generate a random IV (Initialization Vector)
+    unsigned char iv[AES_BLOCK_SIZE];
+    if (RAND_bytes(iv, sizeof(iv)) != 1) {
+        throw std::runtime_error("Failed to generate random IV.");
+    }
 
-  // Initialize the cipher object with the key.
-  if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key.c_str(), NULL)) {
-    std::cerr << "Error initializing cipher object." << std::endl;
-    return "";
-  }
+    // Create and initialize the cipher context
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (ctx == nullptr) {
+        throw std::runtime_error("Failed to create cipher context.");
+    }
 
-  // Encrypt the plaintext.
-  std::vector<unsigned char> ciphertext(plaintext.length() + EVP_CIPHER_CTX_block_size(ctx));
-  size_t ciphertext_len;
-  if (!EVP_EncryptUpdate(ctx, ciphertext.data(), &ciphertext_len, plaintext.c_str(), plaintext.length())) {
-    std::cerr << "Error encrypting plaintext." << std::endl;
-    return "";
-  }
+    // Initialize encryption operation with AES-256, CBC mode, and the provided key and IV
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr,
+                           reinterpret_cast<const unsigned char*>(key.c_str()), iv) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to initialize encryption operation.");
+    }
 
-  // Finalize the encryption.
-  if (!EVP_EncryptFinal_ex(ctx, ciphertext.data() + ciphertext_len, &ciphertext_len)) {
-    std::cerr << "Error finalizing encryption." << std::endl;
-    return "";
-  }
+    // Calculate the required ciphertext buffer size
+    int ciphertextLen = plaintext.length() + AES_BLOCK_SIZE;
+    unsigned char* ciphertext = new unsigned char[ciphertextLen];
 
-  // Return the encrypted string.
-  ciphertext.resize(ciphertext_len);
-  return std::string((char*)ciphertext.data());
+    // Encrypt the plaintext
+    int len;
+    if (EVP_EncryptUpdate(ctx, ciphertext, &len,
+                          reinterpret_cast<const unsigned char*>(plaintext.c_str()), plaintext.length()) != 1) {
+        delete[] ciphertext;
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to encrypt plaintext.");
+    }
+
+    int ciphertextTotalLen = len;
+
+    // Finalize the encryption process
+    if (EVP_EncryptFinal_ex(ctx, ciphertext + len, &len) != 1) {
+        delete[] ciphertext;
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to finalize encryption process.");
+    }
+
+    ciphertextTotalLen += len;
+
+    // Append the IV at the beginning of the ciphertext
+    std::string encryptedText(reinterpret_cast<const char*>(iv), AES_BLOCK_SIZE);
+    encryptedText += std::string(reinterpret_cast<const char*>(ciphertext), ciphertextTotalLen);
+
+    // Clean up
+    delete[] ciphertext;
+    EVP_CIPHER_CTX_free(ctx);
+
+    return encryptedText;
 }
 
 std::string get_secret_key() {
-
+    return "my_super_ultra_top_secret_key";
 }
 
 bool does_key_exist(RocksWrapper_ptr db, const std::string& key_schema, const std::string& key) {
-    std::string error = db->get(key_schema, key, "", &std::vector<std::string>());
+    std::string tmpa, tmpb;
+    std::string error = db->get(key_schema, key, "", tmpa, tmpb);
     return is_successful(error);
-}
-
-// Returns true if the client is authorized, else false
-bool is_client_authorized(const String& name, const String& auth_token)  {
-    std::auth_key = build_auth_token_key(name);
-    std::provided_auth_token = build_auth_token_value(name, auth_token);
-    std::vector<std::string> val;
-    std::string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, auth_key, "", val);
-    return is_successful(error) && val[0] == provided_auth_token;
-}
-
-// Returns true if client is registered, else false
-bool does_client_exist(const String& name) {
-    std::string client_key = build_client_key(name);
-    return does_key_exist(app_db, CLIENT_KEY_SCHEMA, client_key);
-}
-
-// throws std::runtime_error if error is not successful
-void check_successful(const String& error) {
-    if (!is_successful(error)) {
-        throw std::runtime_error(error);
-    }
 }
 
 // Returns the object stored at the key
@@ -157,22 +159,112 @@ T json_at(json obj, const String& key) {
     return obj.at(key).get<T>();
 }
 
+// Returns true if the client is authorized, else false
+// TODO: may want to perform some sort of caching so not doing 2 gets for every request which needs authorization
+bool Controller::is_client_authorized(const String& name, const String& auth_token, const String& category)  {
+    std::string auth_key = build_auth_token_key(name);
+    std::string provided_auth_token = build_auth_token_value(name, auth_token);
+    std::string tmp, val;
+    std::string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, auth_key, "", tmp, val);
+
+    // If category is not empty perform the category check to make sure the client has access to this category
+    bool client_in_category = false;
+    if (category != "") { 
+        try {
+            std::vector<std::string> vals = get_category_values(category);
+            json client_array = json::parse(vals[2]); // TODO: don't do random indexing here please. Use enums.
+            for (auto& client : client_array) {
+                if (client.get<std::string>() == (std::string)name) {
+                    client_in_category = true;
+                    break;
+                }
+            }
+        }
+        catch (const std::exception& e) {
+            error = e.what();
+        }
+    } else {
+        client_in_category = true;
+    }
+
+    return is_successful(error) && json_at<std::string>(json::parse(val)[0], AUTH_TOKEN) == provided_auth_token && client_in_category;
+}
+
+// Returns true if client is registered, else false
+bool Controller::does_client_exist(const String& name) {
+    std::string client_key = build_client_key(name);
+    return does_key_exist(app_db, CLIENT_KEY_SCHEMA, client_key);
+}
+
+// throws std::runtime_error if error is not successful
+void check_successful(const String& error) {
+    if (!is_successful(error)) {
+        throw std::runtime_error(error);
+    }
+}
+
+std::vector<std::string> Controller::get_category_values(const String& category) {
+    std::string category_key = build_category_key(category);
+    std::string tmp, val;
+    check_successful(app_db->get(CATEGORY_KEY_SCHEMA, category_key, "", tmp, val));
+    json obj = json::parse(val);
+    return {json_at<std::string>(obj, KEY_SCHEMA), json_at<std::string>(obj, VALUE_SCHEMA), json_at<std::string>(obj, CLIENTS)};
+}
+
+// overwrites existing category and corresponding client with new information. Will create new category if it doesn't exist
+// REQUIRES that the client is authorized to make this request
+// REQUIRSE: that the modified client exists
+// TODO: for safety may want to make all database puts transactional 
+// TODO: THIS FUNCTION IS WRONG!!!
+String Controller::update_category(const String& client_name, const String& category, const String& key_schema, const String& value_schema, const String& clients) {
+    std::string error = "";
+    try {
+        // add the category to the client
+        std::string client_key = build_client_key(client_name);
+        std::string tmp, val;
+        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, "", tmp, val)); // Check that client exists
+        json obj = json::parse(val);
+        json categories = json_at<json>(obj.at(0), CATEGORIES);
+        for (const auto& cat : categories) {
+            if (cat.get<std::string>() == (std::string)category) {
+                throw std::runtime_error("Client is already in category");
+            }
+        }
+        categories.push_back(category);
+        std::string client_value = build_client_value(client_name, json_at<std::string>(obj.at(0), PASSWORD), categories.dump());
+        check_successful(app_db->put(CLIENT_KEY_SCHEMA, client_key, CLIENT_VALUE_SCHEMA, client_value));
+    
+        // add the client to the category
+        json clients_tmp = json::parse((std::string)clients);
+        clients_tmp.push_back(client_name);
+        std::string category_key = build_category_key(category);
+        std::string category_val = build_category_value(category, key_schema, value_schema, clients_tmp);
+        check_successful(app_db->put(CATEGORY_KEY_SCHEMA, category_key, CATEGORY_VALUE_SCHEMA, category_val));
+    }
+    catch (const std::runtime_error& e) {
+        error = e.what();
+    }
+    return error;
+}
+
+
 ////////////////////////
 //
 //  Endpoint Functions
 //
 ////////////////////////
 
-String Controller::do_get(const String& name, const String& auth_token, const String& key_schema, const String& key, const String& prefix_key, String& value) {
+String Controller::do_get(const String& name, const String& auth_token, const String& category, const String& key, const String& prefix_key, String& keys, String& values) {
     std::string error = "";
     try {
-        if (!is_client_authorized(name, auth_token)) {
+        if (!is_client_authorized(name, auth_token, category)) {
             throw std::runtime_error("Client is not authorized");
         }
-        std::vector<std::string> vals;
-        user_db->get(key_schema, key, prefix_key, vals);
-        json jsonArray(vals.begin(), vals.end());
-        value = jsonArray.dump();
+        std::vector<std::string> category_vals = get_category_values(category);
+        std::string keys_tmp, vals_tmp;
+        user_db->get(category_vals[0], key, prefix_key, keys_tmp, vals_tmp);
+        keys = keys_tmp;
+        values = vals_tmp;
     }
     catch (const std::exception& e) {
         error = e.what();
@@ -180,13 +272,14 @@ String Controller::do_get(const String& name, const String& auth_token, const St
     return error;
 }
 
-String Controller::do_put(const String& name, String auth_token, const String& key_schema, const String& key, const String& value_schema, const String& value) {
+String Controller::do_put(const String& name, String auth_token, const String& category, const String& key, const String& value) {
     std::string error = "";
     try {
-        if (!is_client_authorized(name, auth_token)) {
+        if (!is_client_authorized(name, auth_token, category)) {
             throw std::runtime_error("Client is not authorized");
         }
-        user_db->put(key_schema, key, value_schema, value);
+        std::vector<std::string> category_vals = get_category_values(category);
+        user_db->put(category_vals[0], key, category_vals[1], value);
     }
     catch (const std::exception& e) {
         error = e.what();
@@ -216,7 +309,7 @@ String Controller::do_create_buddy(const String& path, String& folder_path) {
 
         // Create the user database
         fs::path user_path = p;
-        user_db = RocksWrapper::create_db(user_db.string(), USER_DB);       
+        user_db = RocksWrapper::create_db(user_path.string(), USER_DB);       
 
 
     } catch (const fs::filesystem_error& e) {
@@ -274,14 +367,14 @@ String Controller::do_disconnect_buddy() {
     buddy_path = fs::path();
 
     try {
-        delete app_db; // TODO: Should probably check that there is only one instance of this object
+        app_db.reset();; // TODO: Should probably check that there is only one instance of this object
     }
     catch (const std::runtime_error& e) {
         error += e.what();
     }
 
     try {
-        delete user_db; // TODO: should probably check that there is only one instance of this object
+        user_db.reset(); // TODO: should probably check that there is only one instance of this object
     }
     catch (const std::runtime_error& e) {
         error += e.what();
@@ -293,11 +386,12 @@ String Controller::do_create_client(const String& name, const String& password, 
     // TODO: maybe we don't hardcode strings here
     std::string error = "";
     try {
-        std::string client_key = build_client_key(name);
+        std::string key = build_client_key(name);
         if (does_key_exist(app_db, CLIENT_KEY_SCHEMA, key)) { // TODO: you need to figure out what you get back when something doeesn't exist
             throw std::runtime_error("Client already exists");
         }
-        std::string val = build_client_value(name, password, std::vector<string>());
+        std::string tmp;
+        std::string val = build_client_value(name, password, tmp);
         check_successful(app_db->put(CLIENT_KEY_SCHEMA, key, CLIENT_VALUE_SCHEMA, val));
         check_successful(do_connect_client(name, password, auth_token));
     }
@@ -318,19 +412,19 @@ String Controller::do_connect_client(const String& name, const String& password,
         if (does_key_exist(app_db, AUTH_TOKEN_KEY_SCHEMA, auth_key)) { // Check client doesn't already have an authentication token
             throw std::runtime_error("Client already has an authentication token");
         }
-        std::client_key = build_client_key(name);
-        std::vector<std::string> val;
-        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, "", val));
-        json obj = json::parse(val[0]); // This is safe since we checked successful
+        std::string client_key = build_client_key(name);
+        std::string tmp, val;
+        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, "", tmp, val));
+        json obj = json::parse(val); // This is safe since we checked successful
         // TODO: this is a security vulnerability since it means we are storing the password in plaintext
-        if (json_at<std::string>(val, PASSWORD) != (std::string)password) { // Check that password is correct
+        if (json_at<std::string>(obj[0], PASSWORD) != (std::string)password) { // Check that password is correct
             throw std::runtime_error("Incorrect password");
         }
 
         // Generate the authentication token and store it in the app database
         std::string secret_key = get_secret_key();
         auth_token = encrypt_string(secret_key, name);
-        check_successful(app_db->put(AUTH_TOKEN_KEY_SCHEMA, key, AUTH_TOKEN_VALUE_SCHEMA, build_auth_token_value(name, auth_token)));
+        check_successful(app_db->put(AUTH_TOKEN_KEY_SCHEMA, auth_key, AUTH_TOKEN_VALUE_SCHEMA, build_auth_token_value(name, auth_token)));
     }
     catch (const std::runtime_error& e) {
         error += e.what();
@@ -342,7 +436,7 @@ String Controller::do_add_client(const String& client_name, const String& auth_t
     std::string error = "";
     try {
         // Validation Checks
-        if (!is_client_authorized(client_name, auth_token)) { // Check the client is authorized to make this request
+        if (!is_client_authorized(client_name, auth_token, category)) { // Check the client is authorized to make this request
             throw std::runtime_error("Client is not authorized");
         }
         if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category))) { // check that the category exists
@@ -350,46 +444,10 @@ String Controller::do_add_client(const String& client_name, const String& auth_t
         }
         
         // Collect existing category information
-        std::string category_key = build_category_key(category);
-        std::vector<std::string> category_val;
-        check_successful(app_db->get(CATEGORY_KEY_SCHEMA, category_key, "", category_val));
-        json category_obj = json::parse(category_val[0]);
-        std::vector<std::string> clients = json_at<std::vector<std::string>>(category_obj, CLIENTS);
-        
-        // Perform the update
-        check_successful(update_category(add_name, category, json_at<std::string>(category_obj, KEY_SCHEMA), json_at<std::string>(category_obj, VALUE_SCHEMA), clients));
-    }
-    catch (const std::runtime_error& e) {
-        error = e.what();
-    }
-    return error;
-}
+        std::vector<std::string> category_vals = get_category_values(category);
 
-// overwrites existing category and corresponding client with new information. Will create new category if it doesn't exist
-// REQUIRES that the client is authorized to make this request
-// REQUIRSE: that the modified client exists
-// TODO: for safety may want to make all database puts transactional 
-String update_category(const String& client_name, const String& category, const String& key_schema, const String& value_schema, const std::vector<std::string> clients) {
-    std::string error = "";
-    try {
-        // add the category to the client
-        std::string client_key = build_client_key(client_name);
-        std::vector<std::string> val;
-        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, val)); // Check that client exists
-        json obj = json::parse(val[0]);
-        std::vector<std::string> categories = json_at<std::vector<std::string>>(obj, CATEGORIES);
-        if (std::find(categories.begin(), categories.end(), category) != categories.end()) { // Check is already in category
-            throw std::runtime_error("Client is already in category");
-        }
-        categories.push_back(category);
-        std::string client_value = build_client_value(client_name, json_at<std::string>(obj, PASSWORD), categories);
-        check_successful(app_db->put(CLIENT_KEY_SCHEMA, client_key, CLIENT_VALUE_SCHEMA, client_value));
-    
-        // add the client to the category
-        clients.push_back(client_name);
-        std::string category_key = build_category_key(category);
-        std::string category_val = build_category_value(category, key_schema, value_schema, clients);
-        check_successful(app_db->put(CATEGORY_KEY_SCHEMA, category_key, CATEGORY_VALUE_SCHEMA, category_val));
+        // Perform the update
+        check_successful(update_category(add_name, category, category_vals[0], category_vals[1], category_vals[2]));
     }
     catch (const std::runtime_error& e) {
         error = e.what();
@@ -405,14 +463,14 @@ String update_category(const String& client_name, const String& category, const 
 String Controller::do_create_category(const String& client_name, const String& auth_token, const String& category_name, const String& key_schema, const String& value_schema) {
     std::string error = "";
     try {
-        if (!is_client_authorized(client_name, auth_token)) { // Check the client is authorized to make this request
+        if (!is_client_authorized(client_name, auth_token, "")) { // Check the client is authorized to make this request
             throw std::runtime_error("Client is not authorized");
         }
-        if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(name))) { // Check category doesn't already exist
+        if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category_name))) { // Check category doesn't already exist
             throw std::runtime_error("Category already exists");
         }
         // Create the category
-        check_successful(update_category(client_name, category_name, key_schema, value_schema, std::vector<std::string>()));
+        check_successful(update_category(client_name, category_name, key_schema, value_schema, "[]"));
     }
     catch (const std::runtime_error& e) {
         error = e.what();
@@ -421,21 +479,20 @@ String Controller::do_create_category(const String& client_name, const String& a
 }
 
 // TODO: these are very similar maybe merge them?
-String Controller::do_list_clients(String& clients, String& client_schema) {
+String Controller::do_list_clients(String& clients) {
     std::string error = "";
     try {
-        std::vector<std::string> values;
+        std::string tmp, values;
         json names = json::array();
-        std::string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), "name", values);
-        if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
+        std::string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), "name", tmp, values);
+        json vals = json::parse(values);
+        if (!is_successful(error) && vals.size() > 0) { // Don't thrown an error if empty
             throw std::runtime_error("Error getting clients");
         }
-        for (std::string& val : values)  {
-            json obj = json::parse(val);
-            names.push_back(json_at<std::string>(obj, NAME));
+        for (auto& val : vals)  {
+            names.push_back(json_at<std::string>(val.get<json>(), NAME));
         }
         clients = names.dump();
-        client_schema = generate_json_schema(names);
     }
     catch (const std::runtime_error& e) {
         error = e.what();
@@ -443,27 +500,27 @@ String Controller::do_list_clients(String& clients, String& client_schema) {
     return error;
 }
 
-String Controller::do_list_categories(String& categories, String& category_schema) {
+String Controller::do_list_categories(String& categories) {
     std::string error = "";
     try {
-        std::vector<std::string> values;
+        std::string tmp, values;
         json names = json::array();
-        std::string error = app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(""), "name", values);
-        if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
-            throw std::runtime_error("Error getting categories");
+        std::string error = app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(""), "name", tmp, values);
+        json vals = json::parse(values);
+        if (!is_successful(error) && vals.size() > 0) { // Don't thrown an error if empty
+            throw std::runtime_error("Error getting clients");
         }
-        for (std::string& val : values)  {
-            json obj = json::parse(val);
-            names.push_back(json_at<std::string>(obj, NAME));
+        for (auto& val : vals)  {
+            names.push_back(json_at<std::string>(val.get<json>(), NAME));
         }
         categories = names.dump();
-        category_schema = generate_json_schema(names);
     }
     catch (const std::runtime_error& e) {
         error = e.what();
     }
     return error;
 }
+
 
 
 

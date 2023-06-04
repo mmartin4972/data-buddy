@@ -355,4 +355,27 @@ TODO:
 - A total ordering exists in the rocksdb which maintains the order in which keys were inserted into the database
 - Normally, this total ordering is not maintained if the prefix extractor is used, however, some readOptions can be set to allow you to do this.
 - https://github.com/EighteenZi/rocksdb_wiki/blob/master/Prefix-Seek-API-Changes.md
+
+## 6/2/23
+- It turns out that the json schema validator I thought was included in nlohmann's library is not actually included. I therefore, need to install the latest version of nlohmann's json library from scratch, as well as this json schema validator library. They both have cmake files that seem to be configured for the cmake install location. I am consequently just going to try to pull them down and install them into the cmake directory.
+- Installing nlohmann json library
+    - wget https://github.com/nlohmann/json/archive/refs/tags/v3.11.2.tar.gz
+    - tar -xzvf <download>
+    - cd <directory>
+    - mkdir build
+    - cmake ..
+    - make install
+- Installing json schema validator
+    - wget https://github.com/pboettch/json-schema-validator/archive/refs/tags/2.2.0.tar.gz
+    - tar -xzvf <download>
+    - cd <directory>
+    - mkdir build
+    - cmake ..
+    - make install
+- The above steps should be the same for all cmake based libraries
+- You will then have to link in the installed libraries to your existing cmake file
+- Consider getting rid of the schemas for the puts and the gets. If a category requires a certain type of schema you should be able to validate a put or get schema based on the category of the value that they are putting or getting.
+
+6/3/23
+- I was considering returning the schema of the response in the response message, but I think this is overkill. All of my responses will be json objects and can be parsed as such. I will need online API endpoint documentation and should generate it by looking at the DTOs.hpp file, and should consider doing other code generation maneuvers for my endpoint, but not at this time. That documentation will come later.
 - 
