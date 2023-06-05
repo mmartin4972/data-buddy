@@ -197,7 +197,7 @@ public:
      * EFFECTS: deletes the client from the client database
      * RETURNS: empty string if successful, error message if not
     */
-    string do_delete_client(const string& name, const string& auth_token);
+    string do_disconnect_client(const string& name, const string& auth_token);
 
     /**
      * @param name: name of the client
@@ -398,20 +398,20 @@ public:
 
     ENDPOINT_INFO(delete_client) {
         info->summary = "Delete an existing client";
-        info->addConsumes<Object<DeleteClientRecvDto>>("application/json");
-        info->addResponse<Object<DeleteClientRespDto>>(Status::CODE_200, "application/json");
+        info->addConsumes<Object<DisconnectClientRecvDto>>("application/json");
+        info->addResponse<Object<DisconnectClientRespDto>>(Status::CODE_200, "application/json");
     }
     ENDPOINT("POST", "/db-delete-client", delete_client,
-            BODY_DTO(Object<DeleteClientRecvDto>, recv)) {
+            BODY_DTO(Object<DisconnectClientRecvDto>, recv)) {
         // Formatting Checks
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
         // Function Call
-        string error = do_delete_client(recv->name, recv->auth_token);
+        string error = do_disconnect_client(recv->name, recv->auth_token);
         
         // Respond
-        auto dto = DeleteClientRespDto::createShared();
+        auto dto = DisconnectClientRespDto::createShared();
         dto->error = error;
         return createDtoResponse(Status::CODE_200, dto);
     }

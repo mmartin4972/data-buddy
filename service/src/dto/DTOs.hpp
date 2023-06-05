@@ -98,13 +98,13 @@ class ConnectClientRespDto : public oatpp::DTO {
     DTO_FIELD(String, auth_token);
 };
 
-class DeleteClientRecvDto : public oatpp::DTO {
-    DTO_INIT(DeleteClientRecvDto, DTO);
+class DisconnectClientRecvDto : public oatpp::DTO {
+    DTO_INIT(DisconnectClientRecvDto, DTO);
     DTO_FIELD(String, name);
     DTO_FIELD(String, auth_token);
 };
-class DeleteClientRespDto : public oatpp::DTO {
-    DTO_INIT(DeleteClientRespDto, DTO);
+class DisconnectClientRespDto : public oatpp::DTO {
+    DTO_INIT(DisconnectClientRespDto, DTO);
     DTO_FIELD(String, error);
 };
 

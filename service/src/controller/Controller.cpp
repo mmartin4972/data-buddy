@@ -405,7 +405,7 @@ string Controller::do_create_client(const string& name, const string& password, 
     return error;
 }
 
-string Controller::do_delete_client(const string& name, const string& auth_token) {
+string Controller::do_disconnect_client(const string& name, const string& auth_token) {
     string error = "";
     try {
         if (!is_client_authorized(name, auth_token)) { // Check the client is authorized to make this request
