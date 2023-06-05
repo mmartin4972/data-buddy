@@ -396,12 +396,12 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
-    ENDPOINT_INFO(delete_client) {
+    ENDPOINT_INFO(disconnect_client) {
         info->summary = "Delete an existing client";
         info->addConsumes<Object<DisconnectClientRecvDto>>("application/json");
         info->addResponse<Object<DisconnectClientRespDto>>(Status::CODE_200, "application/json");
     }
-    ENDPOINT("POST", "/db-delete-client", delete_client,
+    ENDPOINT("POST", "/db-disconnect-client", disconnect_client,
             BODY_DTO(Object<DisconnectClientRecvDto>, recv)) {
         // Formatting Checks
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
