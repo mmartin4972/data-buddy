@@ -274,48 +274,48 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
-    ENDPOINT_INFO(get) {
-        info->summary = "Get value for the provided key";
-        info->addConsumes<Object<GetRecvDto>>("application/json");
-        info->addResponse<Object<GetRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-get", get,
-            BODY_DTO(Object<GetRecvDto>, recv)) {
-        // Formatting Checks
-        // TODO: complete these
-        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+    // ENDPOINT_INFO(get) {
+    //     info->summary = "Get value for the provided key";
+    //     info->addConsumes<Object<GetRecvDto>>("application/json");
+    //     info->addResponse<Object<GetRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("POST", "/db-get", get,
+    //         BODY_DTO(Object<GetRecvDto>, recv)) {
+    //     // Formatting Checks
+    //     // TODO: complete these
+    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
-        // Function Call
-        string keys;
-        string values;
-        string error = do_get(recv->name, recv->auth_token, recv->category, recv->key, recv->prefix_key, keys, values);
+    //     // Function Call
+    //     string keys;
+    //     string values;
+    //     string error = do_get(recv->name, recv->auth_token, recv->category, recv->key, recv->prefix_key, keys, values);
         
-        // Respond
-        auto dto = GetRespDto::createShared();
-        dto->keys = keys;
-        dto->values = values;
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
+    //     // Respond
+    //     auto dto = GetRespDto::createShared();
+    //     dto->keys = keys;
+    //     dto->values = values;
+    //     dto->error = error;
+    //     return createDtoResponse(Status::CODE_200, dto);
+    // }
 
-    ENDPOINT_INFO(put) {
-        info->summary = "Put provided value in the provided key. Overwrites existing value if any.";
-        info->addConsumes<Object<PutRecvDto>>("application/json");
-        info->addResponse<Object<PutRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-put", put,
-            BODY_DTO(Object<PutRecvDto>, recv)) {
-        // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+    // ENDPOINT_INFO(put) {
+    //     info->summary = "Put provided value in the provided key. Overwrites existing value if any.";
+    //     info->addConsumes<Object<PutRecvDto>>("application/json");
+    //     info->addResponse<Object<PutRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("POST", "/db-put", put,
+    //         BODY_DTO(Object<PutRecvDto>, recv)) {
+    //     // Formatting Checks
+    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
-        // Function Call
-        string error = do_put(recv->name, recv->auth_token, recv->category, recv->key, recv->value);
+    //     // Function Call
+    //     string error = do_put(recv->name, recv->auth_token, recv->category, recv->key, recv->value);
         
-        // Respond
-        auto dto = PutRespDto::createShared();
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
+    //     // Respond
+    //     auto dto = PutRespDto::createShared();
+    //     dto->error = error;
+    //     return createDtoResponse(Status::CODE_200, dto);
+    // }
 
     ENDPOINT_INFO(create_buddy) {
         info->summary = "Create a new data buddy folder";
@@ -332,12 +332,9 @@ public:
         string error = do_create_buddy(recv->path, folder_path);
         
         // Respond
-        std::cout << "Error: " << (string)error << std::endl;
         auto dto = CreateBuddyRespDto::createShared();
-        std::cout << "created response" << std::endl;
         dto->error = error;
         dto->folder_path = folder_path;
-        std::cout << "dto populated" << std::endl;
         return create_response(error, dto);
     }
 
@@ -396,120 +393,120 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
-    ENDPOINT_INFO(disconnect_client) {
-        info->summary = "Delete an existing client";
-        info->addConsumes<Object<DisconnectClientRecvDto>>("application/json");
-        info->addResponse<Object<DisconnectClientRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-disconnect-client", disconnect_client,
-            BODY_DTO(Object<DisconnectClientRecvDto>, recv)) {
-        // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
-        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+    // ENDPOINT_INFO(disconnect_client) {
+    //     info->summary = "Delete an existing client";
+    //     info->addConsumes<Object<DisconnectClientRecvDto>>("application/json");
+    //     info->addResponse<Object<DisconnectClientRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("POST", "/db-disconnect-client", disconnect_client,
+    //         BODY_DTO(Object<DisconnectClientRecvDto>, recv)) {
+    //     // Formatting Checks
+    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
-        // Function Call
-        string error = do_disconnect_client(recv->name, recv->auth_token);
+    //     // Function Call
+    //     string error = do_disconnect_client(recv->name, recv->auth_token);
         
-        // Respond
-        auto dto = DisconnectClientRespDto::createShared();
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
+    //     // Respond
+    //     auto dto = DisconnectClientRespDto::createShared();
+    //     dto->error = error;
+    //     return createDtoResponse(Status::CODE_200, dto);
+    // }
 
-    ENDPOINT_INFO(connect_client) {
-        info->summary = "Connect to an existing client";
-        info->addConsumes<Object<ConnectClientRecvDto>>("application/json");
-        info->addResponse<Object<ConnectClientRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-connect-client", connect_client,
-            BODY_DTO(Object<ConnectClientRecvDto>, recv)) {
-        // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
-        OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
+    // ENDPOINT_INFO(connect_client) {
+    //     info->summary = "Connect to an existing client";
+    //     info->addConsumes<Object<ConnectClientRecvDto>>("application/json");
+    //     info->addResponse<Object<ConnectClientRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("POST", "/db-connect-client", connect_client,
+    //         BODY_DTO(Object<ConnectClientRecvDto>, recv)) {
+    //     // Formatting Checks
+    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+    //     OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
-        // Function Call
-        string auth_token;
-        string error = do_connect_client(recv->name, recv->password, auth_token);
+    //     // Function Call
+    //     string auth_token;
+    //     string error = do_connect_client(recv->name, recv->password, auth_token);
         
-        // Respond
-        auto dto = ConnectClientRespDto::createShared();
-        dto->error = error;
-        dto->auth_token = auth_token;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
+    //     // Respond
+    //     auto dto = ConnectClientRespDto::createShared();
+    //     dto->error = error;
+    //     dto->auth_token = auth_token;
+    //     return createDtoResponse(Status::CODE_200, dto);
+    // }
 
-    ENDPOINT_INFO(add_client) {
-        info->summary = "Add a client to a category";
-        info->addConsumes<Object<AddClientRecvDto>>("application/json");
-        info->addResponse<Object<AddClientRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-add-client", add_client,
-            BODY_DTO(Object<AddClientRecvDto>, recv)) {
-        // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
-        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+    // ENDPOINT_INFO(add_client) {
+    //     info->summary = "Add a client to a category";
+    //     info->addConsumes<Object<AddClientRecvDto>>("application/json");
+    //     info->addResponse<Object<AddClientRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("POST", "/db-add-client", add_client,
+    //         BODY_DTO(Object<AddClientRecvDto>, recv)) {
+    //     // Formatting Checks
+    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
-        // Function Call
-        string error = do_add_client(recv->name, recv->auth_token, recv->category, recv->add_name);
+    //     // Function Call
+    //     string error = do_add_client(recv->name, recv->auth_token, recv->category, recv->add_name);
         
-        // Respond
-        auto dto = AddClientRespDto::createShared();
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
+    //     // Respond
+    //     auto dto = AddClientRespDto::createShared();
+    //     dto->error = error;
+    //     return createDtoResponse(Status::CODE_200, dto);
+    // }
 
-    ENDPOINT_INFO(create_category) {
-        info->summary = "Create a new category";
-        info->addConsumes<Object<CreateCategoryRecvDto>>("application/json");
-        info->addResponse<Object<CreateCategoryRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("POST", "/db-create-category", create_category,
-            BODY_DTO(Object<CreateCategoryRecvDto>, recv)) {
-        // Formatting Checks
-        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
-        OATPP_ASSERT_HTTP(recv->key_schema, Status::CODE_400, "'key_params' is require!");
-        OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
+    // ENDPOINT_INFO(create_category) {
+    //     info->summary = "Create a new category";
+    //     info->addConsumes<Object<CreateCategoryRecvDto>>("application/json");
+    //     info->addResponse<Object<CreateCategoryRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("POST", "/db-create-category", create_category,
+    //         BODY_DTO(Object<CreateCategoryRecvDto>, recv)) {
+    //     // Formatting Checks
+    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+    //     OATPP_ASSERT_HTTP(recv->key_schema, Status::CODE_400, "'key_params' is require!");
+    //     OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
         
-        // Function Call
-        string error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
+    //     // Function Call
+    //     string error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
         
-        // Respond
-        auto dto = CreateCategoryRespDto::createShared();
-        dto->error = error;
-        return createDtoResponse(Status::CODE_200, dto);
-    }
+    //     // Respond
+    //     auto dto = CreateCategoryRespDto::createShared();
+    //     dto->error = error;
+    //     return createDtoResponse(Status::CODE_200, dto);
+    // }
 
-    ENDPOINT_INFO(list_clients) {
-        info->summary = "List all clients";
-        info->addResponse<Object<ListClientsRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("GET", "/db-list-clients", list_clients) {
-        // Function Call
-        string clients;
-        string error = do_list_clients(clients);
+    // ENDPOINT_INFO(list_clients) {
+    //     info->summary = "List all clients";
+    //     info->addResponse<Object<ListClientsRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("GET", "/db-list-clients", list_clients) {
+    //     // Function Call
+    //     string clients;
+    //     string error = do_list_clients(clients);
         
-        // Respond
-        auto dto = ListClientsRespDto::createShared();
-        dto->error = error;
-        dto->clients = clients;
-        return create_response(error, dto);
-    }
+    //     // Respond
+    //     auto dto = ListClientsRespDto::createShared();
+    //     dto->error = error;
+    //     dto->clients = clients;
+    //     return create_response(error, dto);
+    // }
 
-    ENDPOINT_INFO(list_categories) {
-        info->summary = "List all categories";
-        info->addResponse<Object<ListCategoriesRespDto>>(Status::CODE_200, "application/json");
-    }
-    ENDPOINT("GET", "/db-list-categories", list_categories) {
-        // Function Call
-        string categories;
-        string error = do_list_categories(categories);
+    // ENDPOINT_INFO(list_categories) {
+    //     info->summary = "List all categories";
+    //     info->addResponse<Object<ListCategoriesRespDto>>(Status::CODE_200, "application/json");
+    // }
+    // ENDPOINT("GET", "/db-list-categories", list_categories) {
+    //     // Function Call
+    //     string categories;
+    //     string error = do_list_categories(categories);
         
-        // Respond
-        auto dto = ListCategoriesRespDto::createShared();
-        dto->error = error;
-        dto->categories = categories;
-        return create_response(error, dto);
-    }
+    //     // Respond
+    //     auto dto = ListCategoriesRespDto::createShared();
+    //     dto->error = error;
+    //     dto->categories = categories;
+    //     return create_response(error, dto);
+    // }
 };
 
 #include OATPP_CODEGEN_END(ApiController) //<-- End Codegen

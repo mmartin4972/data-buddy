@@ -13,7 +13,7 @@ int main() {
     // Open the database
     Status status = DB::Open(options, "/tmp/testdb", &db);
     if (!status.ok()) {
-        std::cerr << "Error opening database: " << status.ToString() << std::endl;
+        std::cerr << "Errosr opening database: " << status.ToString() << std::endl;
         return 1;
     }
 

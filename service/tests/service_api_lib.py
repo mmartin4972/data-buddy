@@ -39,74 +39,36 @@ class Buddy:
             raise_error(e, res)
         return res
             
-            
     def connect(self):
-        try:
-            res = requests.post(self.url + '/db-connect-buddy', json={"path": self.path})
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
-            
-    
+        return requests.post(self.url + '/db-connect-buddy', json={"path": self.path})
+
     def disconnect(self):
-        try:
-            res = requests.get(self.url + '/db-disconnect-buddy')
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
+        return requests.get(self.url + '/db-disconnect-buddy')
             
         
     def create_client(self, client: Client):
-        try:
-            data = {'name': client.name, 
-                    'password': client.password
-                    }
-            res = requests.post(self.url + '/db-create-client', json=data)
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
-            
+        data = {'name': client.name, 
+                'password': client.password
+                }
+        return requests.post(self.url + '/db-create-client', json=data)            
     
     def connect_client(self, client: Client):
-        try:
-            data = {'name': client.name, 
-                    'password': client.password
-                    }
-            res = requests.post(self.url + '/db-connect-client', json=data)
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
+        data = {'name': client.name, 
+                'password': client.password
+                }
+        return requests.post(self.url + '/db-connect-client', json=data)
     
     def disconnect_client(self, client: Client):
-        try:
-            data = {'name': client.name, 
-                    'auth_token': client.auth_token
-                    }
-            res = requests.post(self.url + '/db-disconnect-client', json=data)
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
+        data = {'name': client.name, 
+                'auth_token': client.auth_token
+                }
+        return requests.post(self.url + '/db-disconnect-client', json=data)
     
     def list_clients(self):
-        try:
-            res = requests.get(self.url + '/db-list-clients')
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
-    
+        return requests.get(self.url + '/db-list-clients')
+                
     def list_categories(self):
-        try:
-            res = requests.get(self.url + '/db-list-categories')
-            assert(res.status_code == 200)
-        except Exception as e :
-            raise_error(e, res)
-        return res
+        return requests.get(self.url + '/db-list-categories')
     
     def get_path(self):
         return self.path

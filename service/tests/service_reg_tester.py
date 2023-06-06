@@ -8,7 +8,6 @@ import traceback
 import shutil
 import sys
 import pdb
-import * from ./service_api_lib
 
 # Helper Functions
 def kill_process_and_children(pid):
@@ -141,13 +140,40 @@ def connect_buddy_endpoint_error_invalid_path(path) :
     # post_response = requests.post('http://localhost:8787/db-get', json=data)
     # print(post_response.text)
 
-def create_client_success(path):
+
+from service_api_lib import * 
+
+def check_success(res) :
+    if res.json()['error'] != "":
+        print(res.json()['error'])
+    assert(res.status_code == 200)
+    assert(res.json()['error'] == "")
+
+def check_fail(res) :
+    if res.json()['error'] != "":
+        print(res.json()['error'])
+    assert(res.status_code != 200)
     
-    
-    
-    
-    
-    
+def check_api_success(path):
+    b = Buddy("http://localhost:8787")
+    check_success(b.create(path))
+    check_fail(b.connect())
+    check_fail(b.disconnect()) # since the prior command should have disconnected you
+    check_success(b.connect())
+    check_success(b.disconnect())
+
+def check_create_client_success(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test_client", "test_password")
+    c1 = Client("test_client1", "test_password1")
+    # pdb.set_trace()
+    check_success(b.create(path))
+    res = b.create_client(c)
+    # pdb.set_trace()
+    print(res.text)
+    # print(res.json()['clients'])
+    # check_success(b.disconnect_client(c))
+    check_success(b.disconnect())
 
 test = ""
 if len(sys.argv) > 1:
@@ -180,7 +206,9 @@ func_list = [test_endpoint_1,
             create_buddy_endpoint_error_invalid_path, 
             connect_endpoint_success, 
             connect_endpoint_error_already_connected,
-            connect_buddy_endpoint_error_invalid_path
+            connect_buddy_endpoint_error_invalid_path,
+            check_api_success,
+            check_create_client_success
             ]
 try:
 # Run the service

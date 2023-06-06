@@ -27,8 +27,6 @@ class RocksWrapper {
 
     // static std::unordered_set<string> opened_paths; // THIS THING IS NOT THREAD SAFE!!
 
-
-
     RocksWrapper(fs::path path) { // TODO: issue with this being private and being constructed by shared_ptr. Please make private again and resolve.
         if (is_path_opened(path)) {
             throw std::invalid_argument("The given path is already opened");
@@ -37,12 +35,19 @@ class RocksWrapper {
         // RocksWrapper::opened_paths.insert(this->path.string());
     }
 
-    bool does_json_conform_schema(const string& schema, const string& data) {
+    bool does_json_conform_schema(const json& schema, const json& data) {
+        bool result = true;
         json_schema_validator validator;
-        validator.set_root_schema(json::parse(schema));
-        return validator.validate(json::parse(data));
+        validator.set_root_schema(schema);
+        try {
+            validator.validate(data);
+        } catch (const std::exception& e) {
+            std::cerr << "Validation failed, here is why: " << e.what() << "\n";
+            result = false;
+        }
+        
+        return result;
     }
-
 
     /**
      * Indicates if the given path is already connected to a database
@@ -98,10 +103,10 @@ class RocksWrapper {
      * REQUIRES: The key is less than max_key_size
      * EFFECTS: Throws an error if the requested key does not exist
     */
-    string get(const string& key_schema, const string& key, const string& prefix_key, string& keys, string& values) {
+    string get(const json& key_schema, const json& key, const string& prefix_key, json& keys, json& values) {
         string error = "";
-        std::vector<string> keys_vec;
-        std::vector<string> values_vec;
+        keys.clear();
+        values.clear();
         
         // Check key size
         if (key.size() > max_key_size) {
@@ -111,28 +116,25 @@ class RocksWrapper {
         } else {
             if (prefix_key.empty()) { // If we are not searching by prefix
                 string value;
-                rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key, &value);
-                keys_vec.push_back(key);
-                values_vec.push_back(value);
+                rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key.dump(), &value);
+                keys.push_back(key);
+                values.push_back(json::parse(value));
                 if (!status.ok()) { // Check get Status
                     error = status.ToString();
                 }
             } else { // If we are searching by prefix
-                string prefix = key.substr(0, key.find(prefix_key));
+                string key_str = key.dump();
+                string prefix = key_str.substr(0, key_str.find(prefix_key));
                 // TODO: do we need to check that prefix_key exists?
                 auto iter = db->NewIterator(rocksdb::ReadOptions());
                 for (iter->Seek(prefix); iter->Valid() && iter->key().starts_with(prefix); iter->Next()) {
-                    keys_vec.push_back(iter->key().ToString());
-                    values_vec.push_back(iter->value().ToString());
+                    keys.push_back(json::parse(iter->key().ToString()));
+                    values.push_back(json::parse(iter->value().ToString()));
                 }
             }
-            if (values_vec.empty()) {
+            if (values.size() == 0) {
                 error = "The given key does not exist";
             }
-            json jsonArray_keys(keys_vec);
-            keys = jsonArray_keys.dump();
-            json jsonArray_vals(values_vec);
-            values = jsonArray_vals.dump();
         }
         return error;
     }
@@ -148,7 +150,7 @@ class RocksWrapper {
      * REQUIRES: The value is less than max_value_size
     */
    // TODO: you may want to consider throwing an error instead of returning a string?
-    string put(const string& key_schema, const string& key, const string& value_schema, const string& value) {
+    string put(const json& key_schema, const json& key, const json& value_schema, const json& value) {
         string error = "";
         if (key.size() > max_key_size) {
             error = "The given key is too large";
@@ -159,7 +161,7 @@ class RocksWrapper {
         } else if (!does_json_conform_schema(value_schema, value)) {
             error = "The given value does not conform to the given schema";
         } else {    
-            rocksdb::Status status = db->Put(rocksdb::WriteOptions(), key, value);
+            rocksdb::Status status = db->Put(rocksdb::WriteOptions(), key.dump(), value.dump());
             if (!status.ok()) {
                 error += status.ToString();
             }
@@ -174,14 +176,14 @@ class RocksWrapper {
      * @return An empty string if the delete was successful, otherwise an error message
      * REQUIRES: The key is less than max_key_size
     */
-    string del(const string& key_schema, const string& key) {
+    string del(const json& key_schema, const json& key) {
         string error = "";
         if (key.size() > max_key_size) {
             error = "The given key is too large";
         } else if (!does_json_conform_schema(key_schema, key)) {
             error = "The given key does not conform to the given schema";
         } else {
-            rocksdb::Status status = db->Delete(rocksdb::WriteOptions(), key);
+            rocksdb::Status status = db->Delete(rocksdb::WriteOptions(), key.dump());
             if (!status.ok()) {
                 error += status.ToString();
             }
