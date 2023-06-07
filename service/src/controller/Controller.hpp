@@ -390,50 +390,50 @@ public:
         auto dto = CreateClientRespDto::createShared();
         dto->error = error;
         dto->auth_token = auth_token;
-        return createDtoResponse(Status::CODE_200, dto);
+        return create_response(error, dto);
     }
 
-    // ENDPOINT_INFO(disconnect_client) {
-    //     info->summary = "Delete an existing client";
-    //     info->addConsumes<Object<DisconnectClientRecvDto>>("application/json");
-    //     info->addResponse<Object<DisconnectClientRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("POST", "/db-disconnect-client", disconnect_client,
-    //         BODY_DTO(Object<DisconnectClientRecvDto>, recv)) {
-    //     // Formatting Checks
-    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
-    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+    ENDPOINT_INFO(disconnect_client) {
+        info->summary = "Disconnect a connected client";
+        info->addConsumes<Object<DisconnectClientRecvDto>>("application/json");
+        info->addResponse<Object<DisconnectClientRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-disconnect-client", disconnect_client,
+            BODY_DTO(Object<DisconnectClientRecvDto>, recv)) {
+        // Formatting Checks
+        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
-    //     // Function Call
-    //     string error = do_disconnect_client(recv->name, recv->auth_token);
+        // Function Call
+        string error = do_disconnect_client(recv->name, recv->auth_token);
         
-    //     // Respond
-    //     auto dto = DisconnectClientRespDto::createShared();
-    //     dto->error = error;
-    //     return createDtoResponse(Status::CODE_200, dto);
-    // }
+        // Respond
+        auto dto = DisconnectClientRespDto::createShared();
+        dto->error = error;
+        return create_response(error, dto);
+    }
 
-    // ENDPOINT_INFO(connect_client) {
-    //     info->summary = "Connect to an existing client";
-    //     info->addConsumes<Object<ConnectClientRecvDto>>("application/json");
-    //     info->addResponse<Object<ConnectClientRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("POST", "/db-connect-client", connect_client,
-    //         BODY_DTO(Object<ConnectClientRecvDto>, recv)) {
-    //     // Formatting Checks
-    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
-    //     OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
+    ENDPOINT_INFO(connect_client) {
+        info->summary = "Connect to an existing client";
+        info->addConsumes<Object<ConnectClientRecvDto>>("application/json");
+        info->addResponse<Object<ConnectClientRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-connect-client", connect_client,
+            BODY_DTO(Object<ConnectClientRecvDto>, recv)) {
+        // Formatting Checks
+        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+        OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
-    //     // Function Call
-    //     string auth_token;
-    //     string error = do_connect_client(recv->name, recv->password, auth_token);
+        // Function Call
+        string auth_token;
+        string error = do_connect_client(recv->name, recv->password, auth_token);
         
-    //     // Respond
-    //     auto dto = ConnectClientRespDto::createShared();
-    //     dto->error = error;
-    //     dto->auth_token = auth_token;
-    //     return createDtoResponse(Status::CODE_200, dto);
-    // }
+        // Respond
+        auto dto = ConnectClientRespDto::createShared();
+        dto->error = error;
+        dto->auth_token = auth_token;
+        return create_response(error, dto);
+    }
 
     // ENDPOINT_INFO(add_client) {
     //     info->summary = "Add a client to a category";

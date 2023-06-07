@@ -169,13 +169,46 @@ def check_create_client_success(path):
     # pdb.set_trace()
     check_success(b.create(path))
     res = b.create_client(c)
-    # pdb.set_trace()
-    print(res.text)
-    # print(res.json()['clients'])
-    print(res.json())
-    # check_success(b.disconnect_client(c))
+    check_success(res)
+    
+    res = b.create_client(c1)
+    check_success(res)
+
     check_success(b.disconnect())
 
+def check_create_same_client_fail(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test_client", "test_password")
+    check_success(b.create(path))
+    res = b.create_client(c)
+    check_success(res)
+    
+    res = b.create_client(c)
+    check_fail(res)
+
+    check_success(b.disconnect())
+    
+def check_connect_disconnect_client_success(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test_client", "test_password")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_fail(b.create_client(c))
+    check_success(b.disconnect_client(c))
+    check_fail(b.create_client(c))
+    check_success(b.connect_client(c))
+    check_success(b.disconnect_client(c))
+    check_success(b.disconnect())
+
+def check_double_disconnect_client(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test_client", "test_password")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(b.disconnect_client(c))
+    check_fail(b.disconnect_client(c))
+    check_success(b.disconnect())
+    
 test = ""
 if len(sys.argv) > 1:
     test = sys.argv[1]   
@@ -209,7 +242,10 @@ func_list = [test_endpoint_1,
             connect_endpoint_error_already_connected,
             connect_buddy_endpoint_error_invalid_path,
             check_api_success,
-            check_create_client_success
+            check_create_client_success,
+            check_create_same_client_fail,
+            check_connect_disconnect_client_success,
+            check_double_disconnect_client
             ]
 try:
 # Run the service

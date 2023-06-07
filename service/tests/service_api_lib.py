@@ -50,13 +50,19 @@ class Buddy:
         data = {'name': client.name, 
                 'password': client.password
                 }
-        return requests.post(self.url + '/db-create-client', json=data)            
+        res = requests.post(self.url + '/db-create-client', json=data)
+        if (res.status_code == 200):
+            client.auth_token = res.json()['auth_token']
+        return res          
     
     def connect_client(self, client: Client):
         data = {'name': client.name, 
                 'password': client.password
                 }
-        return requests.post(self.url + '/db-connect-client', json=data)
+        res = requests.post(self.url + '/db-connect-client', json=data)
+        if (res.status_code == 200):
+            client.auth_token = res.json()['auth_token']
+        return res
     
     def disconnect_client(self, client: Client):
         data = {'name': client.name, 

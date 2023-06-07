@@ -188,8 +188,7 @@ bool Controller::is_client_authorized(const string& name, const string& auth_tok
     json provided_auth_token = build_auth_token_value(name, auth_token);
     json tmp, val;
     string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, build_auth_token_key(name), "", tmp, val);
-
-    return is_successful(error) && json_at<string>(val[0], AUTH_TOKEN) == provided_auth_token;
+    return is_successful(error) && val[0] == provided_auth_token;
 }
 
 bool Controller::is_client_authorized_for_category(const string& name, const string& auth_token, const string& category) {
@@ -424,20 +423,20 @@ string Controller::do_create_client(const string& name, const string& password, 
     return error;
 }
 
-// string Controller::do_disconnect_client(const string& name, const string& auth_token) {
-//     string error = "";
-//     try {
-//         if (!is_client_authorized(name, auth_token)) { // Check the client is authorized to make this request
-//             throw std::runtime_error("Client is not authorized");
-//         }
-//         string auth_key = build_auth_token_key(name);
-//         check_successful(app_db->del(AUTH_TOKEN_KEY_SCHEMA, auth_key));
-//     }
-//     catch (const std::runtime_error& e) {
-//         error += e.what();
-//     }
-//     return error;
-// }
+string Controller::do_disconnect_client(const string& name, const string& auth_token) {
+    string error = "";
+    try {
+        if (!is_client_authorized(name, auth_token)) { // Check the client is authorized to make this request
+            throw std::runtime_error("Client is not authorized");
+        }
+        json auth_key = build_auth_token_key(name);
+        check_successful(app_db->del(AUTH_TOKEN_KEY_SCHEMA, auth_key));
+    }
+    catch (const std::runtime_error& e) {
+        error += e.what();
+    }
+    return error;
+}
 
 
 // Read the secret key from the environment variable
@@ -463,7 +462,6 @@ string Controller::do_connect_client(const string& name, const string& password,
         // Generate the authentication token and store it in the app database
         string secret_key = get_secret_key();
         auth_token = encrypt_string_base64(secret_key, name);
-        std::cout << "Auth token generated: " << auth_token << "\n";
         check_successful(app_db->put(AUTH_TOKEN_KEY_SCHEMA, auth_key, AUTH_TOKEN_VALUE_SCHEMA, build_auth_token_value(name, auth_token)));
     }
     catch (const std::runtime_error& e) {
