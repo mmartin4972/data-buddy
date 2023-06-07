@@ -134,14 +134,19 @@ json build_client_value(const string& name, const string& password) {
     return value;
 }
 
+json build_auth_token_value(const string& name, const string& auth_token) {
+    json value = json::parse(R"({"name":")" + name + R"(","auth_token":")" + auth_token + "\"}");
+    return value;
+}
+
 int main() {
     string name = "test";
     string password = "test_pass";
     string categories = "[\"test_category\"]";
     json check;
     check.push_back("test_cat");
-    json val_test = build_client_value(name, password);
+    json val_test = build_auth_token_value(name, password);
     std::cout << val_test.dump() << std::endl;
-    std::cout << does_json_conform_schema(CLIENT_VALUE_SCHEMA, val_test) << std::endl;
+    // std::cout << does_json_conform_schema(CLIENT_VALUE_SCHEMA, val_test) << std::endl;
     return 0;
 }

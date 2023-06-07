@@ -36,7 +36,7 @@ json build_auth_token_key(const string& name) {
 }
 
 json build_auth_token_value(const string& name, const string& auth_token) {
-    json value = json::parse(R"({"name":)" + name + R"(","auth_token":")" + auth_token + "\"}");
+    json value = json::parse(R"({"name":")" + name + R"(","auth_token":")" + auth_token + "\"}");
     return value;
 }
 

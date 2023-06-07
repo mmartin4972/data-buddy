@@ -172,6 +172,7 @@ def check_create_client_success(path):
     # pdb.set_trace()
     print(res.text)
     # print(res.json()['clients'])
+    print(res.json())
     # check_success(b.disconnect_client(c))
     check_success(b.disconnect())
 

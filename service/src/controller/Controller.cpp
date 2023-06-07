@@ -7,6 +7,8 @@
 #include <openssl/aes.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
 
 ////////////////////////
 //
@@ -75,7 +77,24 @@ bool Controller::is_buddy_connected() {
     return buddy_path.empty() == false;
 }
 
-string encrypt_string(const string& key, const string& plaintext) {
+std::string base64Encode(const unsigned char* data, int length) {
+    BIO* bmem = BIO_new(BIO_s_mem());
+    BIO* b64 = BIO_new(BIO_f_base64());
+    BIO_push(b64, bmem);
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    BIO_write(b64, data, length);
+    BIO_flush(b64);
+
+    BUF_MEM* bptr;
+    BIO_get_mem_ptr(b64, &bptr);
+
+    std::string result(bptr->data, bptr->length);
+    BIO_free_all(b64);
+
+    return result;
+}
+
+string encrypt_string_base64(const string& key, const string& plaintext) {
     // Check if the key length is valid for AES-256 (32 bytes)
     if (key.length() != 32) {
         throw std::invalid_argument("Invalid key length. Key must be 32 bytes for AES-256.");
@@ -132,11 +151,19 @@ string encrypt_string(const string& key, const string& plaintext) {
     delete[] ciphertext;
     EVP_CIPHER_CTX_free(ctx);
 
-    return encryptedText;
+    // Encode the ciphertext in base64
+    string encryptedTextBase64 = base64Encode(reinterpret_cast<const unsigned char*>(encryptedText.c_str()),
+                                              encryptedText.length());
+    return encryptedTextBase64;
 }
 
 string get_secret_key() {
-    return "my_super_ultra_top_secret_key";
+    // NOTE: should be 32 bytes for AES-256
+    // Ex: abcdefghijklmnopqrstuvwxyz123456
+    // string secret_key = std::getenv("DATA_BUDDY_KEY");
+    // std::cout << "Got secret key: " << secret_key << "\n";
+    return "01234567890123456789012345678901";
+;
 }
 
 bool does_key_exist(RocksWrapper_ptr db, const json& key_schema, const json& key) {
@@ -435,7 +462,8 @@ string Controller::do_connect_client(const string& name, const string& password,
 
         // Generate the authentication token and store it in the app database
         string secret_key = get_secret_key();
-        auth_token = encrypt_string(secret_key, name);
+        auth_token = encrypt_string_base64(secret_key, name);
+        std::cout << "Auth token generated: " << auth_token << "\n";
         check_successful(app_db->put(AUTH_TOKEN_KEY_SCHEMA, auth_key, AUTH_TOKEN_VALUE_SCHEMA, build_auth_token_value(name, auth_token)));
     }
     catch (const std::runtime_error& e) {
