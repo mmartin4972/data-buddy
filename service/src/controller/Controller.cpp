@@ -387,8 +387,7 @@ string Controller::do_create_client(const string& name, const string& password, 
         if (does_key_exist(app_db, CLIENT_KEY_SCHEMA, key)) { // TODO: you need to figure out what you get back when something doeesn't exist
             throw std::runtime_error("Client already exists");
         }
-        string tmp;
-        json val = build_client_value(name, password, tmp);
+        json val = build_client_value(name, password);
         check_successful(app_db->put(CLIENT_KEY_SCHEMA, key, CLIENT_VALUE_SCHEMA, val));
         check_successful(do_connect_client(name, password, auth_token));
     }

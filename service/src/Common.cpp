@@ -15,6 +15,11 @@ json build_client_value(const string& name, const string& password, const string
     return value;
 }
 
+json build_client_value(const string& name, const string& password) {
+    json value = json::parse(R"({"name":")" + name + R"(","password":")" + password + R"(","categories":[]})");
+    return value;
+}
+
 json build_category_key(const string& name) {
     json key = json::parse(R"({"category":"category","name":")" + name + "\"}");
     return key;

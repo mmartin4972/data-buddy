@@ -2,6 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json-schema.hpp>
 
+using string = std::string;
 using json = nlohmann::json;
 using json_schema_validator = nlohmann::json_schema::json_validator;
 
@@ -107,9 +108,40 @@ json build_client_key(const std::string& name) {
     return key;
 }
 
+json build_client_value(const string& name, const string& password, const string& categories) {
+    std::string tmp = R"({"name":")" + name + R"(","password":")" + password + R"(","categories":)" + categories + "}";
+    std::cout << tmp << "\n";
+    json value = json::parse(tmp);
+    return value;
+}
+
+bool does_json_conform_schema(const json& schema, const json& data) {
+        bool result = true;
+        json_schema_validator validator;
+        validator.set_root_schema(schema);
+        try {
+            validator.validate(data);
+        } catch (const std::exception& e) {
+            std::cerr << "Validation failed, here is why: " << e.what() << "\n";
+            result = false;
+        }
+        
+        return result;
+    }
+
+json build_client_value(const string& name, const string& password) {
+    json value = json::parse(R"({"name":")" + name + R"(","password":")" + password + R"(","categories":[]})");
+    return value;
+}
+
 int main() {
-    std::string name = "test";
-    json key_test = build_client_key(name);
-    std::cout << key_test.dump() << std::endl;
+    string name = "test";
+    string password = "test_pass";
+    string categories = "[\"test_category\"]";
+    json check;
+    check.push_back("test_cat");
+    json val_test = build_client_value(name, password);
+    std::cout << val_test.dump() << std::endl;
+    std::cout << does_json_conform_schema(CLIENT_VALUE_SCHEMA, val_test) << std::endl;
     return 0;
 }

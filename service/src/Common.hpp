@@ -155,6 +155,8 @@ json build_client_key(const string& name);
 
 json build_client_value(const string& name, const string& password, const string& categories);
 
+json build_client_value(const string& name, const string& password);
+
 json build_category_key(const string& name);
 
 json build_category_value(const string& name, const string& key_schema, const string& value_schema, const std::vector<string>& clients);

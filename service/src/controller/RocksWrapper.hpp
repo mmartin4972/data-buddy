@@ -101,7 +101,7 @@ class RocksWrapper {
      * @param values: Object that the list of value associated with the key is returned in
      * @return The value associated with the given key, or an empty string if the key does not exist
      * REQUIRES: The key is less than max_key_size
-     * EFFECTS: Throws an error if the requested key does not exist
+     * EFFECTS: Returns an error if the requested key does not exist
     */
     string get(const json& key_schema, const json& key, const string& prefix_key, json& keys, json& values) {
         string error = "";
@@ -117,10 +117,14 @@ class RocksWrapper {
             if (prefix_key.empty()) { // If we are not searching by prefix
                 string value;
                 rocksdb::Status status = db->Get(rocksdb::ReadOptions(), key.dump(), &value);
-                keys.push_back(key);
-                values.push_back(json::parse(value));
-                if (!status.ok()) { // Check get Status
+                if (status.IsNotFound()) {
+                    error = "The given key does not exist";
+                }
+                else if (!status.ok()) { // Check get Status
                     error = status.ToString();
+                } else {
+                    keys.push_back(key);    
+                    values.push_back(json::parse(value));
                 }
             } else { // If we are searching by prefix
                 string key_str = key.dump();
@@ -131,9 +135,9 @@ class RocksWrapper {
                     keys.push_back(json::parse(iter->key().ToString()));
                     values.push_back(json::parse(iter->value().ToString()));
                 }
-            }
-            if (values.size() == 0) {
-                error = "The given key does not exist";
+                if (values.size() == 0) {
+                    error = "The given key does not exist";
+                }
             }
         }
         return error;
