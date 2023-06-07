@@ -216,12 +216,6 @@ bool Controller::is_client_authorized_for_category(const string& name, const str
     return is_successful(error) && is_client_in_category;
 }
 
-// Returns true if client is registered, else false
-bool Controller::does_client_exist(const string& name) {
-    string client_key = build_client_key(name);
-    return does_key_exist(app_db, CLIENT_KEY_SCHEMA, client_key);
-}
-
 // throws std::runtime_error if error is not successful
 void check_successful(const string& error) {
     if (!is_successful(error)) {
@@ -438,7 +432,6 @@ string Controller::do_disconnect_client(const string& name, const string& auth_t
     return error;
 }
 
-
 // Read the secret key from the environment variable
 // Use the client's name to then generate them an authentication token
 // Store the authentication token in the app database
@@ -493,11 +486,6 @@ string Controller::do_connect_client(const string& name, const string& password,
 //     return error;
 // }
 
-// // TODO: Implement this
-// // string Controller::do_disconnect_client(const string& client_name, const string& auth_token) {
-// //     return "";
-// // }
-
 // string Controller::do_create_category(const string& client_name, const string& auth_token, const string& category_name, const string& key_schema, const string& value_schema) {
 //     string error = "";
 //     try {
@@ -516,27 +504,26 @@ string Controller::do_connect_client(const string& name, const string& password,
 //     return error;
 // }
 
-// // TODO: these are very similar maybe merge them?
-// string Controller::do_list_clients(string& clients) {
-//     string error = "";
-//     try {
-//         string tmp, values;
-//         json names = json::array();
-//         string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), "name", tmp, values);
-//         json vals = json::parse(values);
-//         if (!is_successful(error) && vals.size() > 0) { // Don't thrown an error if empty
-//             throw std::runtime_error("Error getting clients");
-//         }
-//         for (auto& val : vals)  {
-//             names.push_back(json_at<string>(val.get<json>(), NAME));
-//         }
-//         clients = names.dump();
-//     }
-//     catch (const std::runtime_error& e) {
-//         error = e.what();
-//     }
-//     return error;
-// }
+// TODO: these are very similar maybe merge them?
+string Controller::do_list_clients(string& clients) {
+    string error = "";
+    try {
+        json tmp, values;
+        json names = json::array();
+        string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), "name", tmp, values);
+        if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
+            throw std::runtime_error("Error getting clients");
+        }
+        for (auto& val : values)  {
+            names.push_back(json_at<string>(val.get<json>(), NAME));
+        }
+        clients = names.dump();
+    }
+    catch (const std::runtime_error& e) {
+        error = e.what();
+    }
+    return error;
+}
 
 // string Controller::do_list_categories(string& categories) {
 //     string error = "";

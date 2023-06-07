@@ -389,3 +389,6 @@ TODO:
 - Additionally, all error checking for the conversion from string to json and the well formattedness of values is going to take place in Controller.cpp. Any checks that are specific to the endpoint being called will take place here.
 - Validation of all parameters regarding the structure of the json keys and values will take place in RocksWrapper.hpp
 - We will still return errors as strings by convention
+
+6/7/23
+- It isn't the cleanest thing, but any response I have that is a json object is going to be returned as a string. The user will then have to parse this string as a json object if they wish to decode it. All values returned from the server will be strings as a consequence.s

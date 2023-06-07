@@ -109,12 +109,6 @@ public:
     */
     std::vector<string> get_category_values(const string& category);
 
-    /**
-     * @param name: name of the client
-     * RETURNS: true if the client exists, false otherwise
-    */
-    bool does_client_exist(const string& name);
-
     // overwrites existing category and corresponding client with new information. Will create new category if it doesn't exist
     // REQUIRES that the client is authorized to make this request
     // REQUIRSE: that the modified client exists
@@ -295,7 +289,7 @@ public:
     //     dto->keys = keys;
     //     dto->values = values;
     //     dto->error = error;
-    //     return createDtoResponse(Status::CODE_200, dto);
+    //     return create_response(error, dto);
     // }
 
     // ENDPOINT_INFO(put) {
@@ -314,7 +308,7 @@ public:
     //     // Respond
     //     auto dto = PutRespDto::createShared();
     //     dto->error = error;
-    //     return createDtoResponse(Status::CODE_200, dto);
+    //     return create_response(error, dto);
     // }
 
     ENDPOINT_INFO(create_buddy) {
@@ -452,7 +446,7 @@ public:
     //     // Respond
     //     auto dto = AddClientRespDto::createShared();
     //     dto->error = error;
-    //     return createDtoResponse(Status::CODE_200, dto);
+    //     return create_resopnse(error, dto);
     // }
 
     // ENDPOINT_INFO(create_category) {
@@ -473,24 +467,24 @@ public:
     //     // Respond
     //     auto dto = CreateCategoryRespDto::createShared();
     //     dto->error = error;
-    //     return createDtoResponse(Status::CODE_200, dto);
-    // }
-
-    // ENDPOINT_INFO(list_clients) {
-    //     info->summary = "List all clients";
-    //     info->addResponse<Object<ListClientsRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("GET", "/db-list-clients", list_clients) {
-    //     // Function Call
-    //     string clients;
-    //     string error = do_list_clients(clients);
-        
-    //     // Respond
-    //     auto dto = ListClientsRespDto::createShared();
-    //     dto->error = error;
-    //     dto->clients = clients;
     //     return create_response(error, dto);
     // }
+
+    ENDPOINT_INFO(list_clients) {
+        info->summary = "List all clients";
+        info->addResponse<Object<ListClientsRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("GET", "/db-list-clients", list_clients) {
+        // Function Call
+        string clients;
+        string error = do_list_clients(clients);
+        
+        // Respond
+        auto dto = ListClientsRespDto::createShared();
+        dto->error = error;
+        dto->clients = clients;
+        return create_response(error, dto);
+    }
 
     // ENDPOINT_INFO(list_categories) {
     //     info->summary = "List all categories";

@@ -209,6 +209,20 @@ def check_double_disconnect_client(path):
     check_fail(b.disconnect_client(c))
     check_success(b.disconnect())
     
+def check_list_clients(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test_client", "test_password")
+    c1 = Client("test_client1", "test_password2")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(b.create_client(c1))
+    res = b.list_clients()
+    check_success(res)
+    val = res.json()['clients']
+    check = '''["test_client","test_client1"]'''
+    assert(json.loads(val) == json.loads(check))  
+    check_success(b.disconnect())
+    
 test = ""
 if len(sys.argv) > 1:
     test = sys.argv[1]   
@@ -245,7 +259,8 @@ func_list = [test_endpoint_1,
             check_create_client_success,
             check_create_same_client_fail,
             check_connect_disconnect_client_success,
-            check_double_disconnect_client
+            check_double_disconnect_client,
+            check_list_clients
             ]
 try:
 # Run the service
