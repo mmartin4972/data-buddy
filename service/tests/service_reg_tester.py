@@ -164,8 +164,8 @@ def check_api_success(path):
 
 def check_create_client_success(path):
     b = Buddy("http://localhost:8787")
-    c = Client("test_client", "test_password")
-    c1 = Client("test_client1", "test_password1")
+    c = Client("test client", "test_password")
+    c1 = Client("test client1", "test_password1")
     # pdb.set_trace()
     check_success(b.create(path))
     res = b.create_client(c)
@@ -178,7 +178,7 @@ def check_create_client_success(path):
 
 def check_create_same_client_fail(path):
     b = Buddy("http://localhost:8787")
-    c = Client("test_client", "test_password")
+    c = Client("test client", "test password")
     check_success(b.create(path))
     res = b.create_client(c)
     check_success(res)
@@ -190,7 +190,7 @@ def check_create_same_client_fail(path):
     
 def check_connect_disconnect_client_success(path):
     b = Buddy("http://localhost:8787")
-    c = Client("test_client", "test_password")
+    c = Client("test client", "test password")
     check_success(b.create(path))
     check_success(b.create_client(c))
     check_fail(b.create_client(c))
@@ -202,7 +202,7 @@ def check_connect_disconnect_client_success(path):
 
 def check_double_disconnect_client(path):
     b = Buddy("http://localhost:8787")
-    c = Client("test_client", "test_password")
+    c = Client("test client", "test password")
     check_success(b.create(path))
     check_success(b.create_client(c))
     check_success(b.disconnect_client(c))
@@ -211,7 +211,7 @@ def check_double_disconnect_client(path):
     
 def check_list_clients(path):
     b = Buddy("http://localhost:8787")
-    c = Client("test_client", "test_password")
+    c = Client("test client", "test password")
     c1 = Client("test_client1", "test_password2")
     check_success(b.create(path))
     res = b.list_clients()
@@ -222,13 +222,13 @@ def check_list_clients(path):
     res = b.list_clients()
     check_success(res)
     val = res.json()['clients']
-    check = '''["test_client","test_client1"]'''
+    check = '''["test client","test_client1"]'''
     assert(json.loads(val) == json.loads(check))  
     check_success(b.disconnect())
     
 def create_category_success(path):
     b = Buddy("http://localhost:8787")
-    c = Client("test_client", "test_password")
+    c = Client("test client", "test_password")
     check_success(b.create(path))
     check_success(b.create_client(c))
     check_success(c.create_category("test_category", ))
