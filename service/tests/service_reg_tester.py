@@ -214,6 +214,9 @@ def check_list_clients(path):
     c = Client("test_client", "test_password")
     c1 = Client("test_client1", "test_password2")
     check_success(b.create(path))
+    res = b.list_clients()
+    check_success(res)
+    assert(json.loads(res.json()['clients']) == json.loads("[]"))
     check_success(b.create_client(c))
     check_success(b.create_client(c1))
     res = b.list_clients()
@@ -221,6 +224,14 @@ def check_list_clients(path):
     val = res.json()['clients']
     check = '''["test_client","test_client1"]'''
     assert(json.loads(val) == json.loads(check))  
+    check_success(b.disconnect())
+    
+def create_category_success(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test_client", "test_password")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(c.create_category("test_category", ))
     check_success(b.disconnect())
     
 test = ""

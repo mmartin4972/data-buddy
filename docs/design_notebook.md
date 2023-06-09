@@ -376,12 +376,12 @@ TODO:
 - You will then have to link in the installed libraries to your existing cmake file
 - Consider getting rid of the schemas for the puts and the gets. If a category requires a certain type of schema you should be able to validate a put or get schema based on the category of the value that they are putting or getting.
 
-6/3/23
+## 6/3/23
 - I was considering returning the schema of the response in the response message, but I think this is overkill. All of my responses will be json objects and can be parsed as such. I will need online API endpoint documentation and should generate it by looking at the DTOs.hpp file, and should consider doing other code generation maneuvers for my endpoint, but not at this time. That documentation will come later.
 - I think your github credentials may be stored in your container, which you have publicly hosted on DockerHub. I would recommend making sure that this is not the case.
 - It turns out that an oatpp String is actually a shared_ptr to a string. I was under the impression that it was a custom implementation of std::string and could just be casted directly. Unfortunately a shared_ptr cannot be casted to a std::string, but I believe a type of std::string can be automatically casted to a shared_ptr. Consequently, going forward the rule is going to be that we are going to use std::string for all of the internal facing stuff, and are only going to use String in the Controller.hpp, since that is a type that oatpp will recognize.
 
-6/6/23
+## 6/6/23
 - The json schema seems to have to follow this standard: https://json-schema.org/learn/getting-started-step-by-step
 - The _json is an operator that allows you to pass it a string literal and it will convert it into a json object. Use this when you wish to just hard code strings into json objects.
 - It makes sense to me that the RocksWrapper should ensure that only json objects are going into the database and then only json objects are coming out of the database. We are consequently going to use these json objects throughout the internals of the server and are not going to bother passing all of these objects around as strings
@@ -390,5 +390,18 @@ TODO:
 - Validation of all parameters regarding the structure of the json keys and values will take place in RocksWrapper.hpp
 - We will still return errors as strings by convention
 
-6/7/23
-- It isn't the cleanest thing, but any response I have that is a json object is going to be returned as a string. The user will then have to parse this string as a json object if they wish to decode it. All values returned from the server will be strings as a consequence.s
+## 6/7/23
+- It isn't the cleanest thing, but any response I have that is a json object is going to be returned as a string. The user will then have to parse this string as a json object if they wish to decode it. All values returned from the server will be strings as a consequence.
+- In order to store the AES encryption value in a json object I am going to have to encode the auth_token in a base64 format. Otherwise I may be trying to store special characters in a json object, which it isn't a fan of. The Base64 encoding (https://en.wikipedia.org/wiki/Base64) ensure that only alphanumerical values are used when encoding.
+
+## 6/8/23
+- I am adding the additional constraint that all required keys must be the first keys stored in the json and must be stored in order
+- The ordering of subsequent keys is unimportant
+- This has important implications for performing range based lookups in the database
+- The C++ chrono library is the library to use for all of your date time needs: https://cplusplus.com/reference/chrono/
+- The order within json objects continues to be a problem. Consequently, I think that I am going to have to manually construct keys from the passed in json objects and will construct them in the order specified in one of the properties in the schema. This will allow me to validate the various components of the key, while still maintaining the ordering constraints.
+- Actually, I can just use the required array to validate the ordering when constructing a key, since the values in the ordering are preserved
+- Any properties that are left blank will appear as blank when querying and will likely affect the query, but this is ok, since that is a user problem
+- I'll have to required that properties that come prior to other properties cannot be empty
+- I'll also have to require that the category property is among the categories that are in the database
+- This is also a good defense against "json injection" attacks if you will, since it is harder for people to manipulate the key that is being queried and the category property is guaranteed to exist so we can check if a user is authorized to access a given category property.

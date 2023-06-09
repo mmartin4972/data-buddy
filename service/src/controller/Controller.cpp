@@ -172,16 +172,6 @@ bool does_key_exist(RocksWrapper_ptr db, const json& key_schema, const json& key
     return is_successful(error);
 }
 
-// Returns the object stored at the key
-// Throws std::runtime_error if key does not exist
-template<typename T>
-T json_at(json obj, const string& key) {
-    if (obj.find(key) == obj.end()) {
-        throw std::runtime_error("Key does not exist");
-    }
-    return obj.at(key).get<T>();
-}
-
 // Returns true if the client is authorized, else false
 // TODO: may want to perform some sort of caching so not doing 2 gets for every request which needs authorization
 bool Controller::is_client_authorized(const string& name, const string& auth_token)  {
@@ -198,6 +188,11 @@ bool Controller::is_client_authorized_for_category(const string& name, const str
         // Check that the client is authorized
         if (!is_client_authorized(name, auth_token)) {
             throw std::runtime_error("Client is not authorized");
+        }
+
+        //Check that category is not empty
+        if (category =="") {
+            throw std::runtime_error("Category is empty");
         }
 
         // Perform the category check to make sure the client has access to this category

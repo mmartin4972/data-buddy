@@ -1,7 +1,7 @@
-#include <unordered_map>
+// #include <unordered_map>
 #include <string>
 
-#include <boost/filesystem.hpp> // TODO: may want to change this to filesystem for c++17 and compile with -lstdc++fs
+// #include <boost/filesystem.hpp> // TODO: may want to change this to filesystem for c++17 and compile with -lstdc++fs
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json-schema.hpp>
@@ -166,5 +166,25 @@ json build_auth_token_key(const string& name);
 json build_auth_token_value(const string& name, const string& auth_token);
 
 string generate_json_schema(const nlohmann::json& jsonObject);
+
+// Returns the object stored at the key
+// Throws std::runtime_error if key does not exist
+template<typename T>
+T json_at(json obj, const string& key) {
+    if (obj.find(key) == obj.end()) {
+        throw std::runtime_error("Key does not exist");
+    }
+    return obj.at(key).get<T>();
+}
+
+// Returns the object stored at the key
+// Throws std::runtime_error if key does not exist
+template<typename T>
+T json_at(json obj, const int& index) {
+    if (obj.size() <= index) {
+        throw std::runtime_error("Index out of bounds");
+    }
+    return obj.at(index).get<T>();
+}
 
 #endif /* Common_hpp */
