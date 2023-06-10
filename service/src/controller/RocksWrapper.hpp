@@ -40,7 +40,7 @@ class RocksWrapper {
 
     bool does_json_conform_schema(const json& schema, const json& data) {
         bool result = true;
-        json_schema_validator validator;
+        json_schema_validator validator(nullptr, nlohmann::json_schema::default_string_format_check);
         validator.set_root_schema(schema);
         try {
             validator.validate(data);
@@ -136,7 +136,6 @@ class RocksWrapper {
             throw std::runtime_error("The constructed key is too large");
         }
 
-        std::cout << "Query key: " << query_key << "\n";
         return query_key;
     }
 
@@ -144,13 +143,13 @@ class RocksWrapper {
      * Gets the value associated with the given key
      * @param key_schema: The json schema that the key must conform to
      * @param key: The key to get the value for
-     * @param prefix_key: The key, in the provided key object, which marks the end of the prefix. The prefix_key is not included in the search prefix. If this is an empty string then we don't search by prefix
+     * @param keys: Object that the list of keys associated with the key is returned in
      * @param values: Object that the list of value associated with the key is returned in
      * @return The value associated with the given key, or an empty string if the key does not exist
      * REQUIRES: The key is less than max_key_size
      * EFFECTS: Returns an error if the requested key does not exist
     */
-    string get(const json& key_schema, const json& key, const string& prefix_key, json& keys, json& values) {
+    string get(const json& key_schema, const json& key, json& keys, json& values) {
         string error = "";
         keys.clear();
         values.clear();

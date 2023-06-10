@@ -405,3 +405,6 @@ TODO:
 - I'll have to required that properties that come prior to other properties cannot be empty
 - I'll also have to require that the category property is among the categories that are in the database
 - This is also a good defense against "json injection" attacks if you will, since it is harder for people to manipulate the key that is being queried and the category property is guaranteed to exist so we can check if a user is authorized to access a given category property.
+
+## 6/9/23
+- I am going to create an abstraction for making requests to the server that you are sending json objects, so that in python you pass in a json object, but we convert it to a string during transfer, and then when it is transferred and decoded we decode it as a json object

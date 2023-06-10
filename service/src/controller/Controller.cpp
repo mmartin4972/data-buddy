@@ -168,7 +168,7 @@ string get_secret_key() {
 
 bool does_key_exist(RocksWrapper_ptr db, const json& key_schema, const json& key) {
     json tmpa, tmpb;
-    string error = db->get(key_schema, key, "", tmpa, tmpb);
+    string error = db->get(key_schema, key, tmpa, tmpb);
     return is_successful(error);
 }
 
@@ -177,7 +177,7 @@ bool does_key_exist(RocksWrapper_ptr db, const json& key_schema, const json& key
 bool Controller::is_client_authorized(const string& name, const string& auth_token)  {
     json provided_auth_token = build_auth_token_value(name, auth_token);
     json tmp, val;
-    string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, build_auth_token_key(name), "", tmp, val);
+    string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, build_auth_token_key(name), tmp, val);
     return is_successful(error) && val[0] == provided_auth_token;
 }
 
@@ -220,11 +220,11 @@ void check_successful(const string& error) {
 
 std::vector<string> Controller::get_category_values(const string& category) {
     json tmp, val;
-    check_successful(app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(category), "", tmp, val));
+    check_successful(app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(category), tmp, val));
     return {json_at<string>(val, KEY_SCHEMA), json_at<string>(val, VALUE_SCHEMA), json_at<string>(val, CLIENTS)};
 }
 
-// overwrites existing category and corresponding client with new information. Will create new category if it doesn't exist
+// updates category key so that authorized includes the new client and updates the client key so that categories includes the new category
 // REQUIRES that the client is authorized to make this request
 // REQUIRSE: that the modified client exists
 // TODO: for safety may want to make all database puts transactional 
@@ -233,24 +233,29 @@ string Controller::update_category(const string& client_name, const string& cate
     string error = "";
     try {
         // add the category to the client
-        string client_key = build_client_key(client_name);
+        json client_key = build_client_key(client_name);
         json tmp, val;
-        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, "", tmp, val)); // Check that client exists
-        json categories = json_at<json>(val.at(0), CATEGORIES);
+        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, tmp, val)); // Check that client exists
+        val = json_at<json>(val, 0); // Remove from array
+        json categories = json_at<json>(val, CATEGORIES);
         for (const auto& cat : categories) {
             if (cat.get<string>() == (string)category) {
                 throw std::runtime_error("Client is already in category");
             }
         }
         categories.push_back(category);
-        string client_value = build_client_value(client_name, json_at<string>(val.at(0), PASSWORD), categories.dump());
+        json client_value = build_client_value(client_name, json_at<string>(val, PASSWORD), categories.dump());
         check_successful(app_db->put(CLIENT_KEY_SCHEMA, client_key, CLIENT_VALUE_SCHEMA, client_value));
     
         // add the client to the category
-        json clients_tmp = json::parse((string)clients);
-        clients_tmp.push_back(client_name);
-        string category_key = build_category_key(category);
-        string category_val = build_category_value(category, key_schema, value_schema, clients_tmp);
+        json clients_cur = json::parse(clients);
+        clients_cur.push_back(client_name);
+        json category_key = build_category_key(category);
+        std::cout << clients_cur.dump() << "\n";
+        std::cout << category << "\n";
+        std::cout << key_schema << "\n";
+        std::cout << value_schema << "\n";
+        json category_val = build_category_value(category, key_schema, value_schema, clients_cur.dump());
         check_successful(app_db->put(CATEGORY_KEY_SCHEMA, category_key, CATEGORY_VALUE_SCHEMA, category_val));
     }
     catch (const std::runtime_error& e) {
@@ -440,7 +445,7 @@ string Controller::do_connect_client(const string& name, const string& password,
         }
         json client_key = build_client_key(name);
         json tmp, val;
-        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, "", tmp, val));
+        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, tmp, val));
 
         // TODO: this is a security vulnerability since it means we are storing the password in plaintext
         if (json_at<string>(val[0], PASSWORD) != (string)password) { // Check that password is correct
@@ -481,23 +486,23 @@ string Controller::do_connect_client(const string& name, const string& password,
 //     return error;
 // }
 
-// string Controller::do_create_category(const string& client_name, const string& auth_token, const string& category_name, const string& key_schema, const string& value_schema) {
-//     string error = "";
-//     try {
-//         if (!is_client_authorized(client_name, auth_token)) { // Check the client is authorized to make this request
-//             throw std::runtime_error("Client is not authorized");
-//         }
-//         if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category_name))) { // Check category doesn't already exist
-//             throw std::runtime_error("Category already exists");
-//         }
-//         // Create the category
-//         check_successful(update_category(client_name, category_name, key_schema, value_schema, "[]"));
-//     }
-//     catch (const std::runtime_error& e) {
-//         error = e.what();
-//     }
-//     return error;
-// }
+string Controller::do_create_category(const string& client_name, const string& auth_token, const string& category_name, const string& key_schema, const string& value_schema) {
+    string error = "";
+    try {
+        if (!is_client_authorized(client_name, auth_token)) { // Check the client is authorized to make this request
+            throw std::runtime_error("Client is not authorized");
+        }
+        if (does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category_name))) { // Check category doesn't already exist
+            throw std::runtime_error("Category already exists");
+        }
+        // Create the category
+        check_successful(update_category(client_name, category_name, key_schema, value_schema, "[]"));
+    }
+    catch (const std::runtime_error& e) {
+        error = e.what();
+    }
+    return error;
+}
 
 // TODO: these are very similar maybe merge them?
 string Controller::do_list_clients(string& clients) {
@@ -505,7 +510,7 @@ string Controller::do_list_clients(string& clients) {
     try {
         json tmp, values;
         json names = json::array();
-        string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), "name", tmp, values);
+        string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), tmp, values);
         if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
             throw std::runtime_error("Error getting clients");
         }

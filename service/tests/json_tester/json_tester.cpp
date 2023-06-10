@@ -117,7 +117,8 @@ static json TRANSACTION_KEY_SCHEMA = R"(
             "properties": {
                 "category": { "type": "string" },
                 "time": { 
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 }
             },
             "required": ["category","time"]
@@ -143,7 +144,7 @@ json build_transaction_key(const string& category, const string& time) {
 
 bool does_json_conform_schema(const json& schema, const json& data) {
     bool result = true;
-    json_schema_validator validator;
+    json_schema_validator validator(nullptr, nlohmann::json_schema::default_string_format_check);
     validator.set_root_schema(schema);
     try {
         validator.validate(data);
@@ -167,43 +168,43 @@ bool does_json_conform_schema(const json& schema, const json& data) {
 
 // const string CATEGORY = "category";
 
-string build_query_key_from_json(const json& key_schema, const json& key) {
-    string query_key = "";
-    string delimiter = "::";
-    // Base schema validation
-    if (!does_json_conform_schema(key_schema, key)) {
-        throw std::runtime_error("The given key does not conform to the given key schema");
-    }
+// string build_query_key_from_json(const json& key_schema, const json& key) {
+//     string query_key = "";
+//     string delimiter = "::";
+//     // Base schema validation
+//     if (!does_json_conform_schema(key_schema, key)) {
+//         throw std::runtime_error("The given key does not conform to the given key schema");
+//     }
 
-    // Check that the category is the first property
-    const json& requiredKeys = json_at<json>(key_schema, "required");
-    if (json_at<string>(requiredKeys, 0) != CATEGORY) {
-        throw std::runtime_error("The category property must be the first property in the key schema");
-    }
+//     // Check that the category is the first property
+//     const json& requiredKeys = json_at<json>(key_schema, "required");
+//     if (json_at<string>(requiredKeys, 0) != CATEGORY) {
+//         throw std::runtime_error("The category property must be the first property in the key schema");
+//     }
 
-    // Check that properties that there are no non-empty properties after an empty property
-    bool found_empty = false;
-    for (const auto& req_key : requiredKeys) {
-        string key_value = json_at<string>(key, req_key.get<string>()); // ERROR!! Make sure that you use the json get method here when putting in RocksWrapper
-        if (found_empty && key_value != "") {
-            throw std::runtime_error("The key " + req_key.dump() + " is not allowed to be non-empty when a prior key was already empty");
-        } else if (key_value == "") {
-            std::cout << "Found empty key: " << req_key.dump() << "\n";
-            found_empty = true;
-        } else {
-            std::cout << "Key_vlue: " << key_value << "\n";
-            query_key += key_value + delimiter;
-        }
-    }
-    query_key = query_key.substr(0, query_key.size() - delimiter.size());
+//     // Check that properties that there are no non-empty properties after an empty property
+//     bool found_empty = false;
+//     for (const auto& req_key : requiredKeys) {
+//         string key_value = json_at<string>(key, req_key.get<string>()); // ERROR!! Make sure that you use the json get method here when putting in RocksWrapper
+//         if (found_empty && key_value != "") {
+//             throw std::runtime_error("The key " + req_key.dump() + " is not allowed to be non-empty when a prior key was already empty");
+//         } else if (key_value == "") {
+//             std::cout << "Found empty key: " << req_key.dump() << "\n";
+//             found_empty = true;
+//         } else {
+//             std::cout << "Key_vlue: " << key_value << "\n";
+//             query_key += key_value + delimiter;
+//         }
+//     }
+//     query_key = query_key.substr(0, query_key.size() - delimiter.size());
 
-    // Check that the query_key size is less than the max key size
-    // if (query_key.size() > max_key_size) {
-    //     throw std::runtime_error("The constructed key is too large");
-    // }
+//     // Check that the query_key size is less than the max key size
+//     // if (query_key.size() > max_key_size) {
+//     //     throw std::runtime_error("The constructed key is too large");
+//     // }
 
-    return query_key;
-}
+//     return query_key;
+// }
 
 int main() {
     // auto now = std::chrono::system_clock::now();
@@ -216,23 +217,28 @@ int main() {
     // ss << std::ctime(&time);
     // std::string currentTime = ss.str();
     // Get the current system time
+    // Get the current system time
     auto now = std::chrono::system_clock::now();
 
     // Convert the system time to a time_t object
     std::time_t time = std::chrono::system_clock::to_time_t(now);
 
     // Convert the time_t object to a string
-    std::tm* timeInfo = std::localtime(&time);
-    char buffer[80];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeInfo);
+    std::tm* timeInfo = std::gmtime(&time);  // Use gmtime for UTC time
+    char buffer[21];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", timeInfo);
     std::string currentTime(buffer);
 
-    std::cout << "Current time: " << currentTime << "\n";
-    json transaction_key = build_transaction_key("nice", currentTime);
-    std::cout << "Transaction key: " << transaction_key.dump() << "\n";
+    const string key_schema = R"({"type": "object", "properties": {"category": {"type": "string"}, "time": {"type": "string", "format": "date-time"}}, "required": ["category", "time"]})";
+    const string val_schema = R"({"type": "object", "properties": {"name": {"type": "string"}, "amount": {"type": "number"}, "time": {"type": "string", "format": "date-time"}, "place": {"type": "string"}}, "required": ["name", "amount", "time", "place"]})";
+    const string clients = R"(["test client"])";
+    json val = build_category_value("test_category", key_schema, val_schema, clients);
 
-    string query_key = build_query_key_from_json(TRANSACTION_KEY_SCHEMA, transaction_key);
-    std::cout << "Query key: " << query_key << "\n";
+    // std::cout << "Current time: " << currentTime << "\n";
+    // json transaction_key = build_transaction_key("nice", currentTime);
+    // std::cout << "Transaction key: " << transaction_key.dump() << "\n";
+
+    std::cout << does_json_conform_schema(CATEGORY_VALUE_SCHEMA, val) << "\n";
 
     return 0;
 }

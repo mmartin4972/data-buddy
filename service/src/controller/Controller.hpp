@@ -449,26 +449,26 @@ public:
     //     return create_resopnse(error, dto);
     // }
 
-    // ENDPOINT_INFO(create_category) {
-    //     info->summary = "Create a new category";
-    //     info->addConsumes<Object<CreateCategoryRecvDto>>("application/json");
-    //     info->addResponse<Object<CreateCategoryRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("POST", "/db-create-category", create_category,
-    //         BODY_DTO(Object<CreateCategoryRecvDto>, recv)) {
-    //     // Formatting Checks
-    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
-    //     OATPP_ASSERT_HTTP(recv->key_schema, Status::CODE_400, "'key_params' is require!");
-    //     OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
+    ENDPOINT_INFO(create_category) {
+        info->summary = "Create a new category";
+        info->addConsumes<Object<CreateCategoryRecvDto>>("application/json");
+        info->addResponse<Object<CreateCategoryRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-create-category", create_category,
+            BODY_DTO(Object<CreateCategoryRecvDto>, recv)) {
+        // Formatting Checks
+        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+        OATPP_ASSERT_HTTP(recv->key_schema, Status::CODE_400, "'key_params' is require!");
+        OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
         
-    //     // Function Call
-    //     string error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
+        // Function Call
+        string error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
         
-    //     // Respond
-    //     auto dto = CreateCategoryRespDto::createShared();
-    //     dto->error = error;
-    //     return create_response(error, dto);
-    // }
+        // Respond
+        auto dto = CreateCategoryRespDto::createShared();
+        dto->error = error;
+        return create_response(error, dto);
+    }
 
     ENDPOINT_INFO(list_clients) {
         info->summary = "List all clients";

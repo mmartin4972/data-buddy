@@ -1,12 +1,13 @@
 // #include <unordered_map>
 #include <string>
 
-// #include <boost/filesystem.hpp> // TODO: may want to change this to filesystem for c++17 and compile with -lstdc++fs
-#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json-schema.hpp>
 #include <iostream>
 
+// Comment this for json_tester
+#include <boost/filesystem.hpp> // TODO: may want to change this to filesystem for c++17 and compile with -lstdc++fs
+#include <filesystem>
 #include "oatpp/core/Types.hpp"
 #include "oatpp/web/server/api/ApiController.hpp"
 
@@ -18,12 +19,14 @@
 // ALIAS DEFINITIONS
 //
 //////////////////////
-using string = std::string;
+// Comment this section for json_tester
 using String = oatpp::data::mapping::type::String;
 using Response = std::shared_ptr<oatpp::web::server::api::ApiController::OutgoingResponse>;
 namespace fs = std::filesystem;
 class RocksWrapper;
 using RocksWrapper_ptr = std::shared_ptr<RocksWrapper>;
+
+using string = std::string;
 using json_schema_validator = nlohmann::json_schema::json_validator;
 using json = nlohmann::json;
 
@@ -159,7 +162,7 @@ json build_client_value(const string& name, const string& password);
 
 json build_category_key(const string& name);
 
-json build_category_value(const string& name, const string& key_schema, const string& value_schema, const std::vector<string>& clients);
+json build_category_value(const string& name, const string& key_schema, const string& value_schema, const string& clients);
 
 json build_auth_token_key(const string& name);
 

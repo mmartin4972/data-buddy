@@ -144,9 +144,9 @@ def connect_buddy_endpoint_error_invalid_path(path) :
 from service_api_lib import * 
 
 def check_success(res) :
+    assert(res.status_code == 200)
     if res.json()['error'] != "":
         print(res.json()['error'])
-    assert(res.status_code == 200)
     assert(res.json()['error'] == "")
 
 def check_fail(res) :
@@ -225,13 +225,54 @@ def check_list_clients(path):
     check = '''["test client","test_client1"]'''
     assert(json.loads(val) == json.loads(check))  
     check_success(b.disconnect())
-    
+
+transaction_key_schema = {
+    'type': 'object',
+    'properties': {
+        'category': { 'type': 'string' },
+        'time': { 
+            'type': 'string',
+            'format': 'date-time'
+        }
+    },
+    'required': ['category','time']
+}
+
+transaction_value_schema = {
+    'type': 'object',
+    'properties': {
+        'name': { 'type': 'string' },
+        'amount': { 'type': 'number' },
+        'time': { 
+            'type': 'string',
+            'format': 'date-time'
+            },
+        'place': { 'type': 'string' }
+    },
+    'required': ['name','amount','time','place']
+}
+
+def build_transaction_key(category, time):
+    return {
+        "category": category,
+        "time": time
+    }
+
+def build_transaction_value(name, amount, time, place):
+    return {
+        "name": name,
+        "amount": amount,
+        "time": time,
+        "place": place
+    }
+
 def create_category_success(path):
     b = Buddy("http://localhost:8787")
     c = Client("test client", "test_password")
     check_success(b.create(path))
     check_success(b.create_client(c))
-    check_success(c.create_category("test_category", ))
+    check_success(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_fail(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
     check_success(b.disconnect())
     
 test = ""
@@ -271,7 +312,8 @@ func_list = [test_endpoint_1,
             check_create_same_client_fail,
             check_connect_disconnect_client_success,
             check_double_disconnect_client,
-            check_list_clients
+            check_list_clients,
+            create_category_success
             ]
 try:
 # Run the service

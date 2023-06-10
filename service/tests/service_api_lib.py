@@ -1,5 +1,7 @@
 
 import requests
+import json
+
 
 def raise_error(e, res):
     raise Exception(str(e) + res.json()['error'])
@@ -11,17 +13,26 @@ class Client:
         self.name = name
         self.password = password
         self.auth_token = auth_token
+        self.url = ""
         
-    def get(category, key, prefix_end="") :
+    def get(self, category, key, prefix_end="") :
         return
     
-    def put(category, key, value, prefix_end="") :
+    def put(self, category, key, value, prefix_end="") :
         return
     
-    def create_category(category, key_schema, value_schema) :
-        return
+    def create_category(self, category: str, key_schema: dict, value_schema: dict) :
+        data = {
+            'name': self.name,
+            'auth_token': self.auth_token,
+            'category_name': category,
+            'key_schema': json.dumps(key_schema),
+            'value_schema': json.dumps(value_schema)
+        }
+        print(data)
+        return requests.post(self.url + '/db-create-category', json=data)
     
-    def add_client_to_catetgory(category, client) :
+    def add_client_to_catetgory(self, category, client) :
         return
 
 # Class that is used for database wide operations that don't require authorization
@@ -31,12 +42,9 @@ class Buddy:
         self.url = url
     
     def create(self, path):
-        try:
-            res = requests.post(self.url + '/db-create-buddy', json={"path": path})
-            assert(res.status_code == 200)
+        res = requests.post(self.url + '/db-create-buddy', json={"path": path})
+        if res.status_code == 200 :
             self.path = res.json()['folder_path']
-        except Exception as e :
-            raise_error(e, res)
         return res
             
     def connect(self):
@@ -47,27 +55,32 @@ class Buddy:
             
         
     def create_client(self, client: Client):
-        data = {'name': client.name, 
-                'password': client.password
-                }
+        data = {
+            'name': client.name, 
+            'password': client.password
+        }
         res = requests.post(self.url + '/db-create-client', json=data)
         if (res.status_code == 200):
+            client.url = self.url
             client.auth_token = res.json()['auth_token']
         return res          
     
     def connect_client(self, client: Client):
-        data = {'name': client.name, 
-                'password': client.password
-                }
+        data = {
+            'name': client.name, 
+            'password': client.password
+        }
         res = requests.post(self.url + '/db-connect-client', json=data)
         if (res.status_code == 200):
+            client.url = self.url
             client.auth_token = res.json()['auth_token']
         return res
     
     def disconnect_client(self, client: Client):
-        data = {'name': client.name, 
-                'auth_token': client.auth_token
-                }
+        data = {
+            'name': client.name, 
+            'auth_token': client.auth_token
+        }
         return requests.post(self.url + '/db-disconnect-client', json=data)
     
     def list_clients(self):
