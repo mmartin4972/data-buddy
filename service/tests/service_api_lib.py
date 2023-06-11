@@ -1,12 +1,14 @@
 
 import requests
 import json
+from typing import TypeVar
 
 def raise_error(e, res):
     raise Exception(str(e) + res.json()['error'])
 
 # Class that is used for anything that requires authorization
 # Client can only be connected to one database at a time
+T = TypeVar('T', bound='Client')
 class Client:
     def __init__(self, name="", password="", auth_token=""):
         self.name = name
@@ -28,19 +30,24 @@ class Client:
             'key_schema': json.dumps(key_schema),
             'value_schema': json.dumps(value_schema)
         }
-        print(data)
         return requests.post(self.url + '/db-create-category', json=data)
     
-    def add_client_to_catetgory(self, category, client) :
-        return
+    def add_client_to_category(self, category: str, add_client: T) :
+        data = {
+            'name': self.name,
+            'auth_token': self.auth_token,
+            'category_name': category,
+            'add_name': add_client.name
+        }
+        return requests.post(self.url + '/db-add-client', json=data)
 
 # Class that is used for database wide operations that don't require authorization
 class Buddy:
-    def __init__(self, url, path=""):
+    def __init__(self, url: str, path: str = ""):
         self.path = path
         self.url = url
     
-    def create(self, path):
+    def create(self, path: str):
         res = requests.post(self.url + '/db-create-buddy', json={"path": path})
         if res.status_code == 200 :
             self.path = res.json()['folder_path']

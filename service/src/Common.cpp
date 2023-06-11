@@ -26,10 +26,7 @@ json build_category_key(const string& name) {
 }
 
 json build_category_value(const string& name, const string& key_schema, const string& value_schema, const string& clients) {
-    string res = R"({"name":")" + name + R"(","key_schema":)" + key_schema + R"(,"value_schema":)" + value_schema + R"(,"clients":)" + clients + "}";
-    std::cout << res << std::endl;
-    json value = json::parse(res);
-    return value;
+    return json::parse(R"({"name":")" + name + R"(","key_schema":)" + key_schema + R"(,"value_schema":)" + value_schema + R"(,"clients":)" + clients + "}");
 }
 
 json build_auth_token_key(const string& name) {

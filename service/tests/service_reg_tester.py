@@ -291,6 +291,44 @@ def list_categories_success(path):
     assert(parsed == data)
     check_success(b.disconnect())
     
+def unauthorized_calls(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test client", "test_password")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(b.disconnect_client(c))
+    
+    # Unathorized calls
+    check_fail(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    
+    check_success(b.connect_client(c))
+    
+    # Authorized calls
+    check_success(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_success(b.disconnect())
+    
+def add_client_to_category_success(path) :
+    b = Buddy("http://localhost:8787")
+    c = Client("test client", "test_password")
+    c1 = Client("test client1", "test_password1")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    # Should fail since test client1 doesn't exist
+    check_success(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_fail(c.add_client_to_category("test_category", c1))
+    check_success(b.create_client(c1))
+    check_fail(c1.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_success(c.add_client_to_category("test_category", c1))
+    check_fail(c1.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    # Add disconnected client to category
+    check_success(b.disconnect_client(c1))
+    check_success(c.create_category("test_category2", transaction_key_schema, transaction_value_schema))
+    check_success(c.add_client_to_category("test_category2", c1))
+    check_success(b.disconnect_client(c))
+    list_ans = {'error': '', 'categories': '[{"clients":["test client","test client1"],"key_schema":{"properties":{"category":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["category","time"],"type":"object"},"name":"test_category","value_schema":{"properties":{"amount":{"type":"number"},"name":{"type":"string"},"place":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["name","amount","time","place"],"type":"object"}},{"clients":["test client","test client1"],"key_schema":{"properties":{"category":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["category","time"],"type":"object"},"name":"test_category2","value_schema":{"properties":{"amount":{"type":"number"},"name":{"type":"string"},"place":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["name","amount","time","place"],"type":"object"}}]'}
+    assert(b.list_categories().json() == list_ans)
+    check_success(b.disconnect())
+    
 test = ""
 if len(sys.argv) > 1:
     test = sys.argv[1]   
@@ -330,7 +368,9 @@ func_list = [test_endpoint_1,
             check_double_disconnect_client,
             check_list_clients,
             create_category_success,
-            list_categories_success
+            list_categories_success,
+            unauthorized_calls,
+            add_client_to_category_success
             ]
 try:
 # Run the service

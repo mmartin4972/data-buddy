@@ -112,7 +112,7 @@ class AddClientRecvDto : public oatpp::DTO {
     DTO_INIT(AddClientRecvDto, DTO);
     DTO_FIELD(String, name);
     DTO_FIELD(String, auth_token);
-    DTO_FIELD(String, category);
+    DTO_FIELD(String, category_name);
     DTO_FIELD(String, add_name);
 };
 class AddClientRespDto : public oatpp::DTO {

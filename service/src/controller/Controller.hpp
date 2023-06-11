@@ -107,13 +107,13 @@ public:
      * @param category: name of the category to retreive values from
      * RETURNS: vector containing a string representing each key in the category value
     */
-    std::vector<string> get_category_values(const string& category);
+    std::vector<json> get_category_values(const string& category);
 
     // overwrites existing category and corresponding client with new information. Will create new category if it doesn't exist
     // REQUIRES that the client is authorized to make this request
     // REQUIRSE: that the modified client exists
     // TODO: for safety may want to make all database puts transactional 
-    string update_category(const string& client_name, const string& category, const string& key_schema, const string& value_schema, const string& clients);
+    string update_category(const string& client_name, const string& category, const json& key_schema, const json& value_schema, const json& clients);
 
 
     ////////////////////////
@@ -429,25 +429,27 @@ public:
         return create_response(error, dto);
     }
 
-    // ENDPOINT_INFO(add_client) {
-    //     info->summary = "Add a client to a category";
-    //     info->addConsumes<Object<AddClientRecvDto>>("application/json");
-    //     info->addResponse<Object<AddClientRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("POST", "/db-add-client", add_client,
-    //         BODY_DTO(Object<AddClientRecvDto>, recv)) {
-    //     // Formatting Checks
-    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
-    //     OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+    ENDPOINT_INFO(add_client) {
+        info->summary = "Add a client to a category";
+        info->addConsumes<Object<AddClientRecvDto>>("application/json");
+        info->addResponse<Object<AddClientRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-add-client", add_client,
+            BODY_DTO(Object<AddClientRecvDto>, recv)) {
+        // Formatting Checks
+        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+        OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
+        OATPP_ASSERT_HTTP(recv->category_name, Status::CODE_400, "'category_name' is require!");
+        OATPP_ASSERT_HTTP(recv->add_name, Status::CODE_400, "'add_name' is require!");
         
-    //     // Function Call
-    //     string error = do_add_client(recv->name, recv->auth_token, recv->category, recv->add_name);
+        // Function Call
+        string error = do_add_client(recv->name, recv->auth_token, recv->category_name, recv->add_name);
         
-    //     // Respond
-    //     auto dto = AddClientRespDto::createShared();
-    //     dto->error = error;
-    //     return create_resopnse(error, dto);
-    // }
+        // Respond
+        auto dto = AddClientRespDto::createShared();
+        dto->error = error;
+        return create_response(error, dto);
+    }
 
     ENDPOINT_INFO(create_category) {
         info->summary = "Create a new category";
