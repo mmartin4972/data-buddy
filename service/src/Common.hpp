@@ -96,7 +96,7 @@ static json CATEGORY_VALUE_SCHEMA = R"(
                     "items": { "type": "string" }
                 }
             },
-            "required": ["key_schema", "value_schema", "clients"]
+            "required": ["name", "key_schema", "value_schema", "clients"]
         }
     )"_json;
 

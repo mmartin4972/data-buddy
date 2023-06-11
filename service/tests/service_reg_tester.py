@@ -275,6 +275,22 @@ def create_category_success(path):
     check_fail(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
     check_success(b.disconnect())
     
+def list_categories_success(path):
+    b = Buddy("http://localhost:8787")
+    c = Client("test client", "test_password")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_fail(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_success(c.create_category("test_category2", transaction_key_schema, transaction_value_schema))
+    res = b.list_categories()
+    check_success(res)
+    
+    data = [{'clients': ['test client'], 'key_schema': {'properties': {'category': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['category', 'time'], 'type': 'object'}, 'name': 'test_category', 'value_schema': {'properties': {'amount': {'type': 'number'}, 'name': {'type': 'string'}, 'place': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['name', 'amount', 'time', 'place'], 'type': 'object'}}, {'clients': ['test client'], 'key_schema': {'properties': {'category': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['category', 'time'], 'type': 'object'}, 'name': 'test_category2', 'value_schema': {'properties': {'amount': {'type': 'number'}, 'name': {'type': 'string'}, 'place': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['name', 'amount', 'time', 'place'], 'type': 'object'}}]
+    parsed = json.loads(res.json()['categories'])
+    assert(parsed == data)
+    check_success(b.disconnect())
+    
 test = ""
 if len(sys.argv) > 1:
     test = sys.argv[1]   
@@ -313,7 +329,8 @@ func_list = [test_endpoint_1,
             check_connect_disconnect_client_success,
             check_double_disconnect_client,
             check_list_clients,
-            create_category_success
+            create_category_success,
+            list_categories_success
             ]
 try:
 # Run the service

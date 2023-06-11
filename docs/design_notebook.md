@@ -408,3 +408,5 @@ TODO:
 
 ## 6/9/23
 - I am going to create an abstraction for making requests to the server that you are sending json objects, so that in python you pass in a json object, but we convert it to a string during transfer, and then when it is transferred and decoded we decode it as a json object
+- It may be good to add some trusted client system, where if a client is known and marked as trusted by the user we can bypass formatting checks. Won't worry about it until writing becomes too difficult because of the checks however
+- 

@@ -486,21 +486,21 @@ public:
         return create_response(error, dto);
     }
 
-    // ENDPOINT_INFO(list_categories) {
-    //     info->summary = "List all categories";
-    //     info->addResponse<Object<ListCategoriesRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("GET", "/db-list-categories", list_categories) {
-    //     // Function Call
-    //     string categories;
-    //     string error = do_list_categories(categories);
+    ENDPOINT_INFO(list_categories) {
+        info->summary = "List all categories";
+        info->addResponse<Object<ListCategoriesRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("GET", "/db-list-categories", list_categories) {
+        // Function Call
+        string categories;
+        string error = do_list_categories(categories);
         
-    //     // Respond
-    //     auto dto = ListCategoriesRespDto::createShared();
-    //     dto->error = error;
-    //     dto->categories = categories;
-    //     return create_response(error, dto);
-    // }
+        // Respond
+        auto dto = ListCategoriesRespDto::createShared();
+        dto->error = error;
+        dto->categories = oatpp::String(categories.c_str(), categories.length());
+        return create_response(error, dto);
+    }
 };
 
 #include OATPP_CODEGEN_END(ApiController) //<-- End Codegen

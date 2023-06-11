@@ -251,10 +251,6 @@ string Controller::update_category(const string& client_name, const string& cate
         json clients_cur = json::parse(clients);
         clients_cur.push_back(client_name);
         json category_key = build_category_key(category);
-        std::cout << clients_cur.dump() << "\n";
-        std::cout << category << "\n";
-        std::cout << key_schema << "\n";
-        std::cout << value_schema << "\n";
         json category_val = build_category_value(category, key_schema, value_schema, clients_cur.dump());
         check_successful(app_db->put(CATEGORY_KEY_SCHEMA, category_key, CATEGORY_VALUE_SCHEMA, category_val));
     }
@@ -509,11 +505,12 @@ string Controller::do_list_clients(string& clients) {
     string error = "";
     try {
         json tmp, values;
-        json names = json::array();
         string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), tmp, values);
         if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
             throw std::runtime_error("Error getting clients");
         }
+
+        json names = json::array();
         for (auto& val : values)  {
             names.push_back(json_at<string>(val.get<json>(), NAME));
         }
@@ -525,23 +522,18 @@ string Controller::do_list_clients(string& clients) {
     return error;
 }
 
-// string Controller::do_list_categories(string& categories) {
-//     string error = "";
-//     try {
-//         string tmp, values;
-//         json names = json::array();
-//         string error = app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(""), "name", tmp, values);
-//         json vals = json::parse(values);
-//         if (!is_successful(error) && vals.size() > 0) { // Don't thrown an error if empty
-//             throw std::runtime_error("Error getting clients");
-//         }
-//         for (auto& val : vals)  {
-//             names.push_back(json_at<string>(val.get<json>(), NAME));
-//         }
-//         categories = names.dump();
-//     }
-//     catch (const std::runtime_error& e) {
-//         error = e.what();
-//     }
-//     return error;
-// }
+string Controller::do_list_categories(string& categories) {
+    string error = "";
+    try {
+        json tmp, values;
+        string error = app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(""), tmp, values);
+        if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
+            throw std::runtime_error("Error getting clients");
+        }
+        categories = values.dump();
+    }
+    catch (const std::runtime_error& e) {
+        error = e.what();
+    }
+    return error;
+}

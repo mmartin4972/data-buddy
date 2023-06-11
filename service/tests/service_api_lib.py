@@ -2,7 +2,6 @@
 import requests
 import json
 
-
 def raise_error(e, res):
     raise Exception(str(e) + res.json()['error'])
 
@@ -88,7 +87,7 @@ class Buddy:
                 
     def list_categories(self):
         return requests.get(self.url + '/db-list-categories')
-    
+            
     def get_path(self):
         return self.path
     
