@@ -28,12 +28,24 @@ class GetRecvDto : public oatpp::DTO {
   DTO_INIT(GetRecvDto, DTO);
   DTO_FIELD(String, name);
   DTO_FIELD(String, auth_token);
-  DTO_FIELD(String, category);
+  DTO_FIELD(String, category_name);
   DTO_FIELD(String, key); // JSON object parsed according to key schema associated with given category
-  DTO_FIELD(String, prefix_key); // string which specifies which values in keys to use for range get
 };
 class GetRespDto : public oatpp::DTO {
   DTO_INIT(GetRespDto, DTO);
+  DTO_FIELD(String, value); // JSON object which will be parsed by client
+  DTO_FIELD(String, error);
+};
+
+class GetRangeRecvDto : public oatpp::DTO {
+  DTO_INIT(GetRangeRecvDto, DTO);
+  DTO_FIELD(String, name);
+  DTO_FIELD(String, auth_token);
+  DTO_FIELD(String, category_name);
+  DTO_FIELD(String, key); // JSON object parsed according to key schema associated with given category
+};
+class GetRangeRespDto : public oatpp::DTO {
+  DTO_INIT(GetRangeRespDto, DTO);
   DTO_FIELD(String, keys); // list of keys corresponding to queried values
   DTO_FIELD(String, values); // JSON object which will be parsed by client
   DTO_FIELD(String, error);
@@ -43,7 +55,7 @@ class PutRecvDto : public oatpp::DTO {
   DTO_INIT(PutRecvDto, DTO);
   DTO_FIELD(String, name);
   DTO_FIELD(String, auth_token);
-  DTO_FIELD(String, category);
+  DTO_FIELD(String, category_name);
   DTO_FIELD(String, key); // JSON object parsed according to key_schema associated with category
   DTO_FIELD(String, value); // JSON object parsed according to value_schema associated with category
 };

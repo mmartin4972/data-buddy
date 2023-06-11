@@ -409,4 +409,14 @@ TODO:
 ## 6/9/23
 - I am going to create an abstraction for making requests to the server that you are sending json objects, so that in python you pass in a json object, but we convert it to a string during transfer, and then when it is transferred and decoded we decode it as a json object
 - It may be good to add some trusted client system, where if a client is known and marked as trusted by the user we can bypass formatting checks. Won't worry about it until writing becomes too difficult because of the checks however
-- 
+- I believe that I have managed to wrap up the implementation of this service. Below are the things that I need to do to touch it up:
+    - Remove the db-test endpoint and the db-get-test endpoint
+    - Review and rewrite code
+    - Add error checking for all required parameters in endpoint functions in Controller.hpp
+    - Figure out how to get the AES key string from the environment instead of just reading it from the file
+    - Figure out how to store values passwords not in plaintext
+    - Figure out a better way for encrypting the rocksdb database, so that it is difficult to extract data from it
+    - Figure out managing the json strings
+    - Potentially switch to a different server framework
+    - Track resource utilization and figure out how threading works for this thing
+- At this time however, the MVP has been implemented. I will come back and do these fixes at a later time or as necessary. In the meanwhile I am going to focus on the next phase of the project which are the information retrieval programs.

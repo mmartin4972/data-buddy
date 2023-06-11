@@ -125,24 +125,36 @@ public:
     /**
      * @param name: name of the client
      * @param auth_token: authentication token for the client
-     * @param key_schema: structure of the json schema that the key follows
+     * @param category: category associated with the key
      * @param key: key used to access the dictionary
-     * @param prefix_key: The key, in the provided key object, which marks the end of the prefix. The prefix_key is not included in the search prefix. If this is an empty string then we don't search by prefix
-     * @param value: value populated with a json array of all of the values retrieved by the get
+     * @param value: value populated with a json object of all of the value retrieved by the get
+     * EFFECTS: populates the value string with the values associated with the key according to the
+     *  value_schema associated with the provided category
+     * RETURNS: empty string if successful, error message if not
+     * REQUIRES: key complies with category's key_schema 
+    */
+    string do_get(const string& name, const string& auth_token, const string& category, const string& key, string& value);
+
+    /**
+     * @param name: name of the client
+     * @param auth_token: authentication token for the client
+     * @param category: category associated with the key
+     * @param key: key used to access the dictionary
+     * @param keys: key populated with a json array of all of the keys retrieved by the get
+     * @param values: value populated with a json array of all of the values retrieved by the get
      * EFFECTS: populates the value string with the values associated with the key according to the
      *  value_schema associated with the provided category
      * RETURNS: empty string if successful, error message if not
      * REQUIRES: key complies with category's key_schema 
     */
    // TODO: Modify this to include range based gets and such
-    string do_get(const string& name, const string& auth_token, const string& category, const string& key, const string& prefix_key, string& keys, string& values);
+    string do_get_range(const string& name, const string& auth_token, const string& category, const string& key, string& keys, string& values);
 
     /**
      * @param name: name of the client
      * @param auth_token: authentication token for the client
-     * @param key_schema: structure of the json schema that the key follows
+     * @param category: category the key is placed in to
      * @param key: json string that is queried by
-     * @param value_schema: structure of the json schema that the value follows
      * @param value: json string that is inserted into the database
      * EFFECTS: inserts the value into the associated key
      * RETURNS: empty string if successful, error message if not
@@ -268,48 +280,70 @@ public:
         return createDtoResponse(Status::CODE_200, dto);
     }
 
-    // ENDPOINT_INFO(get) {
-    //     info->summary = "Get value for the provided key";
-    //     info->addConsumes<Object<GetRecvDto>>("application/json");
-    //     info->addResponse<Object<GetRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("POST", "/db-get", get,
-    //         BODY_DTO(Object<GetRecvDto>, recv)) {
-    //     // Formatting Checks
-    //     // TODO: complete these
-    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+    ENDPOINT_INFO(get) {
+        info->summary = "Get value for the provided key";
+        info->addConsumes<Object<GetRecvDto>>("application/json");
+        info->addResponse<Object<GetRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-get", get,
+            BODY_DTO(Object<GetRangeRecvDto>, recv)) {
+        // Formatting Checks
+        // TODO: complete these
+        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
-    //     // Function Call
-    //     string keys;
-    //     string values;
-    //     string error = do_get(recv->name, recv->auth_token, recv->category, recv->key, recv->prefix_key, keys, values);
+        // Function Call
+        string value;
+        string error = do_get(recv->name, recv->auth_token, recv->category_name, recv->key, value);
         
-    //     // Respond
-    //     auto dto = GetRespDto::createShared();
-    //     dto->keys = keys;
-    //     dto->values = values;
-    //     dto->error = error;
-    //     return create_response(error, dto);
-    // }
+        // Respond
+        auto dto = GetRespDto::createShared();
+        dto->value = value;
+        dto->error = error;
+        return create_response(error, dto);
+    }
 
-    // ENDPOINT_INFO(put) {
-    //     info->summary = "Put provided value in the provided key. Overwrites existing value if any.";
-    //     info->addConsumes<Object<PutRecvDto>>("application/json");
-    //     info->addResponse<Object<PutRespDto>>(Status::CODE_200, "application/json");
-    // }
-    // ENDPOINT("POST", "/db-put", put,
-    //         BODY_DTO(Object<PutRecvDto>, recv)) {
-    //     // Formatting Checks
-    //     OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+    ENDPOINT_INFO(get_range) {
+        info->summary = "Get value for the provided key";
+        info->addConsumes<Object<GetRangeRecvDto>>("application/json");
+        info->addResponse<Object<GetRangeRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-get-range", get_range,
+            BODY_DTO(Object<GetRangeRecvDto>, recv)) {
+        // Formatting Checks
+        // TODO: complete these
+        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
-    //     // Function Call
-    //     string error = do_put(recv->name, recv->auth_token, recv->category, recv->key, recv->value);
+        // Function Call
+        string keys;
+        string values;
+        string error = do_get_range(recv->name, recv->auth_token, recv->category_name, recv->key, keys, values);
         
-    //     // Respond
-    //     auto dto = PutRespDto::createShared();
-    //     dto->error = error;
-    //     return create_response(error, dto);
-    // }
+        // Respond
+        auto dto = GetRangeRespDto::createShared();
+        dto->keys = keys;
+        dto->values = values;
+        dto->error = error;
+        return create_response(error, dto);
+    }
+
+    ENDPOINT_INFO(put) {
+        info->summary = "Put provided value in the provided key. Overwrites existing value if any.";
+        info->addConsumes<Object<PutRecvDto>>("application/json");
+        info->addResponse<Object<PutRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-put", put,
+            BODY_DTO(Object<PutRecvDto>, recv)) {
+        // Formatting Checks
+        OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
+        
+        // Function Call
+        string error = do_put(recv->name, recv->auth_token, recv->category_name, recv->key, recv->value);
+        
+        // Respond
+        auto dto = PutRespDto::createShared();
+        dto->error = error;
+        return create_response(error, dto);
+    }
 
     ENDPOINT_INFO(create_buddy) {
         info->summary = "Create a new data buddy folder";

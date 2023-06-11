@@ -8,6 +8,7 @@ import traceback
 import shutil
 import sys
 import pdb
+from datetime import datetime, timedelta
 
 # Helper Functions
 def kill_process_and_children(pid):
@@ -286,7 +287,7 @@ def list_categories_success(path):
     res = b.list_categories()
     check_success(res)
     
-    data = [{'clients': ['test client'], 'key_schema': {'properties': {'category': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['category', 'time'], 'type': 'object'}, 'name': 'test_category', 'value_schema': {'properties': {'amount': {'type': 'number'}, 'name': {'type': 'string'}, 'place': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['name', 'amount', 'time', 'place'], 'type': 'object'}}, {'clients': ['test client'], 'key_schema': {'properties': {'category': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['category', 'time'], 'type': 'object'}, 'name': 'test_category2', 'value_schema': {'properties': {'amount': {'type': 'number'}, 'name': {'type': 'string'}, 'place': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['name', 'amount', 'time', 'place'], 'type': 'object'}}]
+    data = [{'clients': ['test client'], 'key_schema': {'properties': {'category': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['category', 'time'], 'type': 'object'}, 'name': 'test_category2', 'value_schema': {'properties': {'amount': {'type': 'number'}, 'name': {'type': 'string'}, 'place': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['name', 'amount', 'time', 'place'], 'type': 'object'}}, {'clients': ['test client'], 'key_schema': {'properties': {'category': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['category', 'time'], 'type': 'object'}, 'name': 'test_category', 'value_schema': {'properties': {'amount': {'type': 'number'}, 'name': {'type': 'string'}, 'place': {'type': 'string'}, 'time': {'format': 'date-time', 'type': 'string'}}, 'required': ['name', 'amount', 'time', 'place'], 'type': 'object'}}]
     parsed = json.loads(res.json()['categories'])
     assert(parsed == data)
     check_success(b.disconnect())
@@ -294,17 +295,23 @@ def list_categories_success(path):
 def unauthorized_calls(path):
     b = Buddy("http://localhost:8787")
     c = Client("test client", "test_password")
+    c1 = Client("test client1", "test_password1")
     check_success(b.create(path))
+    check_fail(b.disconnect_client(c))
     check_success(b.create_client(c))
+    check_success(b.create_client(c1))
     check_success(b.disconnect_client(c))
     
-    # Unathorized calls
+    # Unauthorized calls
     check_fail(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
-    
-    check_success(b.connect_client(c))
+    check_fail(c.add_client_to_category("test_category", c))
     
     # Authorized calls
+    res = b.connect_client(c)
+    check_success(res)
     check_success(c.create_category("test_category", transaction_key_schema, transaction_value_schema))
+    check_fail(c.add_client_to_category("test_category", c))
+    check_fail(c1.add_client_to_category("test_category", c1))
     check_success(b.disconnect())
     
 def add_client_to_category_success(path) :
@@ -324,10 +331,80 @@ def add_client_to_category_success(path) :
     check_success(b.disconnect_client(c1))
     check_success(c.create_category("test_category2", transaction_key_schema, transaction_value_schema))
     check_success(c.add_client_to_category("test_category2", c1))
+    check_fail(c.add_client_to_category("test_category2", c))
     check_success(b.disconnect_client(c))
-    list_ans = {'error': '', 'categories': '[{"clients":["test client","test client1"],"key_schema":{"properties":{"category":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["category","time"],"type":"object"},"name":"test_category","value_schema":{"properties":{"amount":{"type":"number"},"name":{"type":"string"},"place":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["name","amount","time","place"],"type":"object"}},{"clients":["test client","test client1"],"key_schema":{"properties":{"category":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["category","time"],"type":"object"},"name":"test_category2","value_schema":{"properties":{"amount":{"type":"number"},"name":{"type":"string"},"place":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["name","amount","time","place"],"type":"object"}}]'}
-    assert(b.list_categories().json() == list_ans)
+    res = b.list_categories()
+    check_success(res)
+    ans = {'error': '', 'categories': '[{"clients":["test client","test client1"],"key_schema":{"properties":{"category":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["category","time"],"type":"object"},"name":"test_category2","value_schema":{"properties":{"amount":{"type":"number"},"name":{"type":"string"},"place":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["name","amount","time","place"],"type":"object"}},{"clients":["test client","test client1"],"key_schema":{"properties":{"category":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["category","time"],"type":"object"},"name":"test_category","value_schema":{"properties":{"amount":{"type":"number"},"name":{"type":"string"},"place":{"type":"string"},"time":{"format":"date-time","type":"string"}},"required":["name","amount","time","place"],"type":"object"}}]'}
+    assert(b.list_categories().json() == ans)
     check_success(b.disconnect())
+
+def get_put(path) :
+    b = Buddy("http://localhost:8787")
+    c = Client("test client", "test_password")
+    c1 = Client("test client1", "test_password1")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(b.create_client(c1))
+    
+    # Authorized calls
+    check_success(c.create_category("transaction", transaction_key_schema, transaction_value_schema))
+    time_string_bad = "45"
+    
+    current_time = datetime.utcnow()
+    time_string = current_time.isoformat("T") + "Z"
+    check_success(c.put("transaction", build_transaction_key("transaction", time_string), build_transaction_value("test_name", 1.0, time_string, "test_place")))
+    check_success(c.put("transaction", build_transaction_key("transaction", time_string), build_transaction_value("test_name", 1.0, time_string, "test_place"))) # duplicate puts should succeed
+    check_fail(c.put("transaction", build_transaction_key("transaction", time_string_bad), build_transaction_value("test_name", 1.0, time_string_bad, "test_place"))) # Should fail format check
+    res = c.get("transaction", build_transaction_key("transaction", time_string))
+    check_success(res)
+    assert(json.loads(res.json()['value']) == build_transaction_value("test_name", 1.0, time_string, "test_place"))
+    
+    # Unauthorized calls
+    current_time = datetime.utcnow()
+    time_string = current_time.isoformat("T") + "Z"
+    check_fail(c1.put("transaction", build_transaction_key("transaction", time_string), build_transaction_value("test_name", 1.0, time_string, "test_place")))
+    check_fail(c1.get("transaction", build_transaction_key("transaction", time_string)))
+    
+    # Unauthorized that should now succeed
+    check_success(c.add_client_to_category("transaction", c1))
+    check_success(c1.put("transaction", build_transaction_key("transaction", time_string), build_transaction_value("test_name", 1.0, time_string, "test_place")))
+    res = c1.get("transaction", build_transaction_key("transaction", time_string))
+    check_success(res)
+    assert(json.loads(res.json()['value']) == build_transaction_value("test_name", 1.0, time_string, "test_place"))
+    check_success(b.disconnect())
+
+def get_range_put(path) :
+    b = Buddy("http://localhost:8787")
+    c = Client("test client", "test_password")
+    c1 = Client("test client1", "test_password1")
+    check_success(b.create(path))
+    check_success(b.create_client(c))
+    check_success(b.create_client(c1))
+    check_success(c.create_category("transaction", transaction_key_schema, transaction_value_schema))
+    
+    current_time = datetime.utcnow() - timedelta(hours=1)
+    time_string = current_time.isoformat("T") + "Z"
+    check_success(c.put("transaction", build_transaction_key("transaction", time_string), build_transaction_value("test_name", 1.0, time_string, "test_place")))
+    
+    current_time = datetime.utcnow()
+    time_string1 = current_time.isoformat("T") + "Z"
+    check_success(c.put("transaction", build_transaction_key("transaction", time_string1), build_transaction_value("test_name", 2.0, time_string1, "test_place")))
+
+    current_time = datetime.utcnow()
+    time_string2 = current_time.isoformat("T") + "Z"
+    check_success(c.put("transaction", build_transaction_key("transaction", time_string2), build_transaction_value("test_name", 3.0, time_string2, "test_place")))
+    
+    res = c.get_range("transaction", build_transaction_key("transaction", ""))
+    check_success(res)
+    assert(json.loads(res.json()['values']) == [build_transaction_value("test_name", 1.0, time_string, "test_place"), build_transaction_value("test_name", 2.0, time_string1, "test_place"), build_transaction_value("test_name", 3.0, time_string2, "test_place")])
+    
+    res = c.get_range("transaction", build_transaction_key("transaction", time_string1[0:14]))
+    check_success(res)
+    assert(json.loads(res.json()['values']) == [build_transaction_value("test_name", 2.0, time_string1, "test_place"), build_transaction_value("test_name", 3.0, time_string2, "test_place")])
+
+    check_success(b.disconnect())
+    
     
 test = ""
 if len(sys.argv) > 1:
@@ -370,7 +447,9 @@ func_list = [test_endpoint_1,
             create_category_success,
             list_categories_success,
             unauthorized_calls,
-            add_client_to_category_success
+            add_client_to_category_success,
+            get_put,
+            get_range_put
             ]
 try:
 # Run the service
@@ -385,11 +464,11 @@ try:
         shutil.rmtree(path)
     for func in func_list:
         if (test == "" or func.__name__ == test):
-            print(func.__name__)
+            print("[TEST]", func.__name__)
             os.mkdir(path)
             func(path)
             shutil.rmtree(path)
-            print("Passed")
+            print("[PASSED]")
     
     print ("All tests passed!")
     

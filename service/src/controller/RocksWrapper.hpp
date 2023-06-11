@@ -38,9 +38,16 @@ class RocksWrapper {
         // RocksWrapper::opened_paths.insert(this->path.string());
     }
 
-    bool does_json_conform_schema(const json& schema, const json& data) {
+    bool does_json_conform_schema(const json& schema, const json& data, bool check_format = true) {
         bool result = true;
-        json_schema_validator validator(nullptr, nlohmann::json_schema::default_string_format_check);
+        json_schema_validator validator;
+
+        if (check_format) {
+            validator = json_schema_validator(nullptr, nlohmann::json_schema::default_string_format_check);
+        } else {
+            validator = json_schema_validator(nullptr, [](const string &format, const string &value){}); // Format check function that does nothing
+        }
+
         validator.set_root_schema(schema);
         try {
             validator.validate(data);
@@ -103,12 +110,16 @@ class RocksWrapper {
      * REQUIRES: all properties after an empty property are empty
      * REQUIRES: constructed key is within size limits
     */
-    string build_query_key_from_json(const json& key_schema, const json& key) {
+    string build_query_key_from_json(const json& key_schema, const json& key, bool is_range_lookup) {
         string query_key = "";
         string delimiter = "::";
+
         // Base schema validation
-        if (!does_json_conform_schema(key_schema, key)) {
-            throw std::runtime_error("The given key does not conform to the given key schema");
+        if (!is_range_lookup && !does_json_conform_schema(key_schema, key)) {
+            throw std::runtime_error("The given key " + key.dump() + " does not conform to the given key schema");
+        }
+        else if (is_range_lookup && !does_json_conform_schema(key_schema, key, false)) {
+            throw std::runtime_error("The given key " + key.dump() + " does not conform to the given key schema");
         }
 
         // Check that the category is the first property
@@ -121,15 +132,15 @@ class RocksWrapper {
         bool found_empty = false;
         for (const auto& req_key : requiredKeys) {
             string key_value = json_at<string>(key, req_key.get<string>()); // ERROR!! Make sure that you use the json get method here when putting in RocksWrapper
-            if (found_empty && key_value != "") {
-                throw std::runtime_error("The key " + req_key.dump() + " is not allowed to be non-empty when a prior key was already empty");
-            } else if (key_value == "") {
-                found_empty = true;
+            if (is_range_lookup && key_value == "") {
+                break; // Stop building the key once we found any empty property
             } else {
                 query_key += key_value + delimiter;
             }
         }
-        query_key = query_key.substr(0, query_key.size() - delimiter.size());
+        if (is_range_lookup) {
+            query_key = query_key.substr(0, query_key.size() - delimiter.size()); // Remove the last delimiter so can search by range
+        }
 
         // Check that the query_key size is less than the max key size
         if (query_key.size() > max_key_size) {
@@ -143,19 +154,19 @@ class RocksWrapper {
      * Gets the value associated with the given key
      * @param key_schema: The json schema that the key must conform to
      * @param key: The key to get the value for
-     * @param keys: Object that the list of keys associated with the key is returned in
-     * @param values: Object that the list of value associated with the key is returned in
+     * @param keys: Object that the LIST of keys associated with the key is returned in
+     * @param values: Object that the LIST of values associated with the key is returned in
      * @return The value associated with the given key, or an empty string if the key does not exist
      * REQUIRES: The key is less than max_key_size
      * EFFECTS: Returns an error if the requested key does not exist
     */
-    string get(const json& key_schema, const json& key, json& keys, json& values) {
+    string get_range(const json& key_schema, const json& key, json& keys, json& values) {
         string error = "";
         keys.clear();
         values.clear();
         
         try {
-            string query_key = build_query_key_from_json(key_schema, key);
+            string query_key = build_query_key_from_json(key_schema, key, true);
             auto iter = db->NewIterator(rocksdb::ReadOptions());
             for (iter->Seek(query_key); iter->Valid() && iter->key().starts_with(query_key); iter->Next()) {
                 keys.push_back(iter->key().ToString()); // TODO: may want to reconstruct json?
@@ -164,6 +175,33 @@ class RocksWrapper {
             if (values.size() == 0) {
                 throw std::runtime_error("The requested key does not exist");
             }
+        } catch (const std::exception& e) {
+            error = e.what();
+        }
+        return error;
+    }
+
+    /**
+     * Gets the value associated with the given key
+     * @param key_schema: The json schema that the key must conform to
+     * @param key: The key to get the value for
+     * @param value: Object that the value associated with the key is returned in (not a list)
+     * @return The value associated with the given key, or an empty string if the key does not exist
+     * REQUIRES: The key is less than max_key_size
+     * EFFECTS: Returns an error if the requested key does not exist
+    */
+    string get(const json& key_schema, const json& key, json& value) {
+        string error = "";
+        value.clear();
+        
+        try {
+            string query_key = build_query_key_from_json(key_schema, key, false);
+            string val_str;
+            rocksdb::Status status = db->Get(rocksdb::ReadOptions(), query_key, &val_str);
+            if (!status.ok()) {
+                throw std::runtime_error("The requested key: " + query_key + " does not exist");
+            }
+            value = json::parse(val_str);
         } catch (const std::exception& e) {
             error = e.what();
         }
@@ -183,20 +221,25 @@ class RocksWrapper {
    // TODO: you may want to consider throwing an error instead of returning a string?
     string put(const json& key_schema, const json& key, const json& value_schema, const json& value) {
         string error = "";
-        if (key.size() > max_key_size) {
-            error = "The given key is too large";
-        } else if (value.size() > max_value_size) {
-            error = "The given value is too large";
-        } else if (!does_json_conform_schema(key_schema, key)) {
-            error = "The given key does not conform to the given schema";
-        } else if (!does_json_conform_schema(value_schema, value)) {
-            error = "The given value does not conform to the given schema";
-        } else {
-            string query_key = build_query_key_from_json(key_schema, key);
-            rocksdb::Status status = db->Put(rocksdb::WriteOptions(), query_key, value.dump());
-            if (!status.ok()) {
-                error += status.ToString();
+
+        try {
+            if ((key.dump()).size() > max_key_size) {
+                throw std::runtime_error("The given key is too large");
+            } else if ((value.dump()).size() > max_value_size) {
+                throw std::runtime_error("The given value is too large");
+            } else if (!does_json_conform_schema(key_schema, key)) {
+                throw std::runtime_error("The given key does not conform to the given schema");
+            } else if (!does_json_conform_schema(value_schema, value)) {
+                throw std::runtime_error("The given value does not conform to the given schema");
+            } else {
+                string query_key = build_query_key_from_json(key_schema, key, false);
+                rocksdb::Status status = db->Put(rocksdb::WriteOptions(), query_key, value.dump());
+                if (!status.ok()) {
+                    throw std::runtime_error(status.ToString());
+                }
             }
+        } catch (const std::exception& e) {
+            error = e.what();
         }
         return error;
     }
@@ -210,16 +253,21 @@ class RocksWrapper {
     */
     string del(const json& key_schema, const json& key) {
         string error = "";
-        if (key.size() > max_key_size) {
-            error = "The given key is too large";
-        } else if (!does_json_conform_schema(key_schema, key)) {
-            error = "The given key does not conform to the given schema";
-        } else {
-            string query_key = build_query_key_from_json(key_schema, key);
-            rocksdb::Status status = db->Delete(rocksdb::WriteOptions(), query_key);
-            if (!status.ok()) {
-                error += status.ToString();
+
+        try {
+            if (key.size() > max_key_size) {
+                throw std::runtime_error("The given key is too large");
+            } else if (!does_json_conform_schema(key_schema, key)) {
+                throw std::runtime_error("The given key does not conform to the given schema");
+            } else {
+                string query_key = build_query_key_from_json(key_schema, key, false);
+                rocksdb::Status status = db->Delete(rocksdb::WriteOptions(), query_key);
+                if (!status.ok()) {
+                    throw std::runtime_error(status.ToString());
+                }
             }
+        } catch (const std::exception& e) {
+            error = e.what();
         }
         return error;
     }

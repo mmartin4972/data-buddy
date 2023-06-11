@@ -16,11 +16,33 @@ class Client:
         self.auth_token = auth_token
         self.url = ""
         
-    def get(self, category, key, prefix_end="") :
-        return
+    def get(self, category, key) :
+        data = {
+            'name': self.name,
+            'auth_token': self.auth_token,
+            'category_name': category,
+            'key': json.dumps(key)
+        }
+        return requests.post(self.url + '/db-get', json=data)
     
-    def put(self, category, key, value, prefix_end="") :
-        return
+    def get_range(self, category, key) :
+        data = {
+            'name': self.name,
+            'auth_token': self.auth_token,
+            'category_name': category,
+            'key': json.dumps(key)
+        }
+        return requests.post(self.url + '/db-get-range', json=data)
+    
+    def put(self, category, key, value) :
+        data = {
+            'name': self.name,
+            'auth_token': self.auth_token,
+            'category_name': category,
+            'key': json.dumps(key),
+            'value': json.dumps(value)
+        }
+        return requests.post(self.url + '/db-put', json=data)
     
     def create_category(self, category: str, key_schema: dict, value_schema: dict) :
         data = {

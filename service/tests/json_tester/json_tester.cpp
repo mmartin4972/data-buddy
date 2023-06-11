@@ -4,7 +4,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
-#include "../../src/Common.hpp"
+// #include "../../src/Common.hpp"
 #include <vector>
 
 // using string = std::string;
@@ -111,19 +111,19 @@
 // For all put requests to app_db we need to require the category value to be "category_name"
 // The user is free to add any additional keys on to that.
 // Category must be the FIRST value
-static json TRANSACTION_KEY_SCHEMA = R"(
-        {
-            "type": "object",
-            "properties": {
-                "category": { "type": "string" },
-                "time": { 
-                    "type": "string",
-                    "format": "date-time"
-                }
-            },
-            "required": ["category","time"]
-        }
-    )"_json;
+// static json TRANSACTION_KEY_SCHEMA = R"(
+//         {
+//             "type": "object",
+//             "properties": {
+//                 "category": { "type": "string" },
+//                 "time": { 
+//                     "type": "string",
+//                     "format": "date-time"
+//                 }
+//             },
+//             "required": ["category","time"]
+//         }
+//     )"_json;
 
 // json build_client_key(const std::string& name) {
 //     json key = json::parse(R"({"category":"client","name":")" + name + "\"}");
@@ -137,24 +137,24 @@ static json TRANSACTION_KEY_SCHEMA = R"(
 //     return value;
 // }
 
-json build_transaction_key(const string& category, const string& time) {
-    json key = json::parse(R"({"category":")" + category + R"(","time":")" + time + "\"}");
-    return key;
-}
+// json build_transaction_key(const string& category, const string& time) {
+//     json key = json::parse(R"({"category":")" + category + R"(","time":")" + time + "\"}");
+//     return key;
+// }
 
-bool does_json_conform_schema(const json& schema, const json& data) {
-    bool result = true;
-    json_schema_validator validator(nullptr, nlohmann::json_schema::default_string_format_check);
-    validator.set_root_schema(schema);
-    try {
-        validator.validate(data);
-    } catch (const std::exception& e) {
-        std::cerr << "Validation failed, here is why: " << e.what() << "\n";
-        result = false;
-    }
+// bool does_json_conform_schema(const json& schema, const json& data) {
+//     bool result = true;
+//     json_schema_validator validator(nullptr, nlohmann::json_schema::default_string_format_check);
+//     validator.set_root_schema(schema);
+//     try {
+//         validator.validate(data);
+//     } catch (const std::exception& e) {
+//         std::cerr << "Validation failed, here is why: " << e.what() << "\n";
+//         result = false;
+//     }
     
-    return result;
-}
+//     return result;
+// }
 
 // json build_client_value(const string& name, const string& password) {
 //     json value = json::parse(R"({"name":")" + name + R"(","password":")" + password + R"(","categories":[]})");
@@ -206,6 +206,8 @@ bool does_json_conform_schema(const json& schema, const json& data) {
 //     return query_key;
 // }
 
+using string = std::string;
+
 int main() {
     // auto now = std::chrono::system_clock::now();
 
@@ -228,17 +230,18 @@ int main() {
     char buffer[21];
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", timeInfo);
     std::string currentTime(buffer);
+    std::cout << "Current time: " << currentTime << "\n";
 
-    const string key_schema = R"({"type": "object", "properties": {"category": {"type": "string"}, "time": {"type": "string", "format": "date-time"}}, "required": ["category", "time"]})";
-    const string val_schema = R"({"type": "object", "properties": {"name": {"type": "string"}, "amount": {"type": "number"}, "time": {"type": "string", "format": "date-time"}, "place": {"type": "string"}}, "required": ["name", "amount", "time", "place"]})";
-    const string clients = R"(["test client"])";
-    json val = build_category_value("test_category", key_schema, val_schema, clients);
+    // const string key_schema = R"({"type": "object", "properties": {"category": {"type": "string"}, "time": {"type": "string", "format": "date-time"}}, "required": ["category", "time"]})";
+    // const string val_schema = R"({"type": "object", "properties": {"name": {"type": "string"}, "amount": {"type": "number"}, "time": {"type": "string", "format": "date-time"}, "place": {"type": "string"}}, "required": ["name", "amount", "time", "place"]})";
+    // const string clients = R"(["test client"])";
+    // json val = build_category_value("test_category", key_schema, val_schema, clients);
 
-    // std::cout << "Current time: " << currentTime << "\n";
-    // json transaction_key = build_transaction_key("nice", currentTime);
-    // std::cout << "Transaction key: " << transaction_key.dump() << "\n";
+    // // std::cout << "Current time: " << currentTime << "\n";
+    // // json transaction_key = build_transaction_key("nice", currentTime);
+    // // std::cout << "Transaction key: " << transaction_key.dump() << "\n";
 
-    std::cout << does_json_conform_schema(CATEGORY_VALUE_SCHEMA, val) << "\n";
+    // std::cout << does_json_conform_schema(CATEGORY_VALUE_SCHEMA, val) << "\n";
 
     return 0;
 }

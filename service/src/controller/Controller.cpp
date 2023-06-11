@@ -167,8 +167,8 @@ string get_secret_key() {
 }
 
 bool does_key_exist(RocksWrapper_ptr db, const json& key_schema, const json& key) {
-    json tmpa, tmpb;
-    string error = db->get(key_schema, key, tmpa, tmpb);
+    json tmp;
+    string error = db->get(key_schema, key, tmp);
     return is_successful(error);
 }
 
@@ -176,9 +176,9 @@ bool does_key_exist(RocksWrapper_ptr db, const json& key_schema, const json& key
 // TODO: may want to perform some sort of caching so not doing 2 gets for every request which needs authorization
 bool Controller::is_client_authorized(const string& name, const string& auth_token)  {
     json provided_auth_token = build_auth_token_value(name, auth_token);
-    json tmp, val;
-    string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, build_auth_token_key(name), tmp, val);
-    return is_successful(error) && val[0] == provided_auth_token;
+    json val;
+    string error = app_db->get(AUTH_TOKEN_KEY_SCHEMA, build_auth_token_key(name), val);
+    return is_successful(error) && val == provided_auth_token;
 }
 
 bool Controller::is_client_authorized_for_category(const string& name, const string& auth_token, const string& category) {
@@ -219,9 +219,8 @@ void check_successful(const string& error) {
 }
 
 std::vector<json> Controller::get_category_values(const string& category) {
-    json tmp, val;
-    check_successful(app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(category), tmp, val));
-    val = json_at<json>(val, 0); // Remove from array
+    json val;
+    check_successful(app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(category), val));
     return {json_at<json>(val, KEY_SCHEMA), json_at<json>(val, VALUE_SCHEMA), json_at<json>(val, CLIENTS)};
 }
 
@@ -235,9 +234,8 @@ string Controller::update_category(const string& client_name, const string& cate
     try {
         // add the category to the client
         json client_key = build_client_key(client_name);
-        json tmp, val;
-        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, tmp, val)); // Check that client exists
-        val = json_at<json>(val, 0); // Remove from array
+        json val;
+        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, val)); // Check that client exists
         json categories = json_at<json>(val, CATEGORIES);
         for (const auto& cat : categories) {
             if (cat.get<string>() == category) {
@@ -268,38 +266,55 @@ string Controller::update_category(const string& client_name, const string& cate
 //
 ////////////////////////
 
-// string Controller::do_get(const string& name, const string& auth_token, const string& category, const string& key, const string& prefix_key, string& keys, string& values) {
-//     string error = "";
-//     try {
-//         if (!is_client_authorized_for_category(name, auth_token, category)) {
-//             throw std::runtime_error("Client is not authorized");
-//         }
-//         std::vector<string> category_vals = get_category_values(category);
-//         string keys_tmp, vals_tmp;
-//         user_db->get(json::parse(category_vals[0]), json::parse(key), prefix_key, keys_tmp, vals_tmp);
-//         keys = keys_tmp;
-//         values = vals_tmp;
-//     }
-//     catch (const std::exception& e) {
-//         error = e.what();
-//     }
-//     return error;
-// }
+string Controller::do_get(const string& name, const string& auth_token, const string& category, const string& key, string& value) {
+    string error = "";
+    try {
+        if (!is_client_authorized_for_category(name, auth_token, category)) {
+            throw std::runtime_error("Client is not authorized");
+        }
+        std::vector<json> category_vals = get_category_values(category);
+        json val;
+        check_successful(user_db->get(category_vals[0], json::parse(key), val));
+        value = val.dump();
+    }
+    catch (const std::exception& e) {
+        error = e.what();
+    }
+    return error;
+}
 
-// string Controller::do_put(const string& name, string auth_token, const string& category, const string& key, const string& value) {
-//     string error = "";
-//     try {
-//         if (!is_client_authorized_for_category(name, auth_token, category)) {
-//             throw std::runtime_error("Client is not authorized");
-//         }
-//         std::vector<string> category_vals = get_category_values(category);
-//         user_db->put(category_vals[0], key, category_vals[1], value);
-//     }
-//     catch (const std::exception& e) {
-//         error = e.what();
-//     }
-//     return error;
-// }
+string Controller::do_get_range(const string& name, const string& auth_token, const string& category, const string& key, string& keys, string& values) {
+    string error = "";
+    try {
+        if (!is_client_authorized_for_category(name, auth_token, category)) {
+            throw std::runtime_error("Client is not authorized");
+        }
+        std::vector<json> category_vals = get_category_values(category);
+        json keys_tmp, vals_tmp;
+        check_successful(user_db->get_range(category_vals[0], json::parse(key), keys_tmp, vals_tmp));
+        keys = keys_tmp.dump();
+        values = vals_tmp.dump();
+    }
+    catch (const std::exception& e) {
+        error = e.what();
+    }
+    return error;
+}
+
+string Controller::do_put(const string& name, string auth_token, const string& category, const string& key, const string& value) {
+    string error = "";
+    try {
+        if (!is_client_authorized_for_category(name, auth_token, category)) {
+            throw std::runtime_error("Client is not authorized");
+        }
+        std::vector<json> category_vals = get_category_values(category);
+        check_successful(user_db->put(category_vals[0], json::parse(key), category_vals[1], json::parse(value)));
+    }
+    catch (const std::exception& e) {
+        error = e.what();
+    }
+    return error;
+}
 
 // TODO: Security vulnerability in that anyone can read the app data, which should be private
 string Controller::do_create_buddy(const string& path, string& folder_path) {
@@ -441,11 +456,11 @@ string Controller::do_connect_client(const string& name, const string& password,
             throw std::runtime_error("Client already has an authentication token");
         }
         json client_key = build_client_key(name);
-        json tmp, val;
-        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, tmp, val));
+        json val;
+        check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, val));
 
         // TODO: this is a security vulnerability since it means we are storing the password in plaintext
-        if (json_at<string>(val[0], PASSWORD) != (string)password) { // Check that password is correct
+        if (json_at<string>(val, PASSWORD) != (string)password) { // Check that password is correct
             throw std::runtime_error("Incorrect password");
         }
 
@@ -506,7 +521,7 @@ string Controller::do_list_clients(string& clients) {
     string error = "";
     try {
         json tmp, values;
-        string error = app_db->get(CLIENT_KEY_SCHEMA, build_client_key(""), tmp, values);
+        string error = app_db->get_range(CLIENT_KEY_SCHEMA, build_client_key(""), tmp, values);
         if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
             throw std::runtime_error("Error getting clients");
         }
@@ -527,7 +542,7 @@ string Controller::do_list_categories(string& categories) {
     string error = "";
     try {
         json tmp, values;
-        string error = app_db->get(CATEGORY_KEY_SCHEMA, build_category_key(""), tmp, values);
+        string error = app_db->get_range(CATEGORY_KEY_SCHEMA, build_category_key(""), tmp, values);
         if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
             throw std::runtime_error("Error getting clients");
         }
