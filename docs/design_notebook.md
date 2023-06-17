@@ -498,3 +498,8 @@ TODO:
 - I will want to create a .git/info/sparse-checkout file and add it to my amazon web scraper. This sparse-checkout will extract files from the azad github repository. I will use their processing files, but then build a new UI and interaction system on top of his processing files. When he rolls out updates I want to have a script that is just going to be able to pull the updates and the sparse-checkout will surely enable me to do this
 
 ## 6/17/23
+- background.ts interfaces with the data extraction scripts, so I certainly want to avoid using background.ts and just communicate with these scripts directly
+- inject.ts seems to be the file that I am going to want to interface with
+- azad_order.getOrdersByRange may be the function that I would like to use and define for my interface
+- I think order.ts and item.ts are the two important files that are doing all of the extraction
+- git worktree add and git sparse checkout seem like a pain in the ass. I am just going to write a bash script, which clones the whole thing, copies out the files that I want, and then deletes the whole thing
