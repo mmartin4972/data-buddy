@@ -1,0 +1,35 @@
+{
+    "manifest_version": 3,
+    "name": "Focus Mode",
+    "description": "Enable focus mode on Chrome's official Extensions and Chrome Web Store documentation.",
+    "version": "1.0",
+    "icons": {
+      "48": "images/database-lock-icon-white-48.png",
+      "128": "images/database-lock-icon-white-128.png"
+    },
+    "background": {
+      "service_worker": "background.js",
+      "type": "module"
+    },
+    "permissions": [
+        "scripting", 
+        "activeTab", 
+        "tabs",
+        "background"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {},
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/*",
+                "popup/*",
+                "*.html",
+                "*.js"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ]
+  }

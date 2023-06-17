@@ -1,0 +1,37 @@
+// {
+//     "manifest_version": 3,
+//     "name": "Data Buddy",
+//     "version": "1.0",
+//     "description": "Extract information from web pages and store it in a database",
+//     "icons": {
+//       "48": "images/database-lock-icon-white-48.png",
+//       "128": "images/database-lock-icon-white-128.png"
+//     },
+//     "background": {
+//       "service_worker": "background.js"
+//     },
+//     "content_scripts": [
+//       {
+//         "js": ["scripts/content.js"],
+//         "matches": [
+//           "https://developer.chrome.com/*"
+//         ]
+//       }
+//     ],
+//     "action": {
+//         "default_popup": "popup/popup.html",
+//         "default_icon": "images/database-lock-icon-white-128.png"
+//     },
+//     "permissions": [
+//         "scripting", "activeTab"
+//     ],
+//     "commands": {
+//         "_execute_action": {
+//           "suggested_key": {
+//             "default": "Ctrl+B",
+//             "mac": "Command+B"
+//           }
+//         }
+//       }
+    
+//   }

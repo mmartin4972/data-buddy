@@ -415,6 +415,10 @@ string Controller::do_create_client(const string& name, const string& password, 
     // TODO: maybe we don't hardcode strings here
     string error = "";
     try {
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
+
         json key = build_client_key(name);
         if (does_key_exist(app_db, CLIENT_KEY_SCHEMA, key)) { // TODO: you need to figure out what you get back when something doeesn't exist
             throw std::runtime_error("Client already exists");
@@ -432,6 +436,9 @@ string Controller::do_create_client(const string& name, const string& password, 
 string Controller::do_disconnect_client(const string& name, const string& auth_token) {
     string error = "";
     try {
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
         if (!is_client_authorized(name, auth_token)) { // Check the client is authorized to make this request
             throw std::runtime_error("Client is not authorized");
         }
@@ -451,6 +458,9 @@ string Controller::do_connect_client(const string& name, const string& password,
     string error = "";
     try {
         // Validation Checks
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
         json auth_key = build_auth_token_key(name);
         if (does_key_exist(app_db, AUTH_TOKEN_KEY_SCHEMA, auth_key)) { // Check client doesn't already have an authentication token
             throw std::runtime_error("Client already has an authentication token");
@@ -479,6 +489,9 @@ string Controller::do_add_client(const string& client_name, const string& auth_t
     string error = "";
     try {
         // Validation Checks
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
         if (!does_key_exist(app_db, CATEGORY_KEY_SCHEMA, build_category_key(category))) { // check that the category exists
             throw std::runtime_error("Category does not exist");
         }
@@ -501,6 +514,9 @@ string Controller::do_add_client(const string& client_name, const string& auth_t
 string Controller::do_create_category(const string& client_name, const string& auth_token, const string& category_name, const string& key_schema, const string& value_schema) {
     string error = "";
     try {
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
         if (!is_client_authorized(client_name, auth_token)) { // Check the client is authorized to make this request
             throw std::runtime_error("Client is not authorized");
         }
@@ -520,6 +536,12 @@ string Controller::do_create_category(const string& client_name, const string& a
 string Controller::do_list_clients(string& clients) {
     string error = "";
     try {
+        // Validation Checks
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
+
+        // Retreive list of clients
         json tmp, values;
         string error = app_db->get_range(CLIENT_KEY_SCHEMA, build_client_key(""), tmp, values);
         if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty
@@ -541,6 +563,12 @@ string Controller::do_list_clients(string& clients) {
 string Controller::do_list_categories(string& categories) {
     string error = "";
     try {
+        // Validation Checks
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
+
+        // Retrieve values
         json tmp, values;
         string error = app_db->get_range(CATEGORY_KEY_SCHEMA, build_category_key(""), tmp, values);
         if (!is_successful(error) && values.size() > 0) { // Don't thrown an error if empty

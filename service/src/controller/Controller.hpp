@@ -46,33 +46,6 @@ public:
      * RETURNS: 0
     */
     int db_test();
-    
-    /**
-     * REQUIRES: string is formatted as json object
-     * RETURNS: dictionary with key value pairs corresponding to the json object
-    */
-    // Dictionary string_to_dictionary(string str);
-    
-    /**
-     * RETURNS: string formatted as json object
-    */
-    // string dictionary_to_string(Dictionary dict);
-
-    /**
-     * RETURNS: true if the dictionary is valid for the given category, false if not 
-    */
-    // bool is_dictionary_valid(Dictionary dict, string category);
-
-    // /**
-    //  * RETURNS: true if the error string indicates success, false if not
-    // */
-    // bool is_successful(string error);
-
-    // /**
-    //  * RETURNS: true if the error string indicates success, false if not
-    // */
-    // bool is_successful(string error);
-
 
     /**
      * @param error: error message to be sent to client
@@ -101,7 +74,6 @@ public:
      * RETURNS: true if the client is authorized and they are authorized for the category, false otherwise
     */
     bool is_client_authorized_for_category(const string& name, const string& auth_token, const string& category);
-
 
     /**
      * @param category: name of the category to retreive values from
@@ -291,6 +263,10 @@ public:
         // TODO: complete these
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-get hit\n";
+        }
+
         // Function Call
         string value;
         string error = do_get(recv->name, recv->auth_token, recv->category_name, recv->key, value);
@@ -313,6 +289,10 @@ public:
         // TODO: complete these
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-get-range hit\n";
+        }
+
         // Function Call
         string keys;
         string values;
@@ -336,6 +316,10 @@ public:
         // Formatting Checks
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-put hit\n";
+        }
+
         // Function Call
         string error = do_put(recv->name, recv->auth_token, recv->category_name, recv->key, recv->value);
         
@@ -355,6 +339,10 @@ public:
         // Formatting Checks
         OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is required!");
         
+        if (DEBUG) {
+            std::cout << "/db-create-buddy hit\n";
+        }
+
         // Function Call
         string folder_path;
         string error = do_create_buddy(recv->path, folder_path);
@@ -376,6 +364,10 @@ public:
         // Formatting Checks
         OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-connect-buddy hit\n";
+        }
+
         // Function Call
         string error = do_connect_buddy(recv->path);
         
@@ -390,6 +382,11 @@ public:
         info->addResponse<Object<DisconnectBuddyRespDto>>(Status::CODE_200, "application/json");
     }
     ENDPOINT("GET", "/db-disconnect-buddy", disconnect_buddy) {
+        
+        if (DEBUG) {
+            std::cout << "/db-disconnect-buddy hit\n";
+        }
+
         // Function Call
         string error = do_disconnect_buddy();
         
@@ -410,6 +407,10 @@ public:
         OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-create-client hit\n";
+        }
+
         // Function Call
         string auth_token;
         string error = do_create_client(recv->name, recv->password, auth_token);
@@ -432,6 +433,10 @@ public:
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-disconnect-client hit\n";
+        }
+
         // Function Call
         string error = do_disconnect_client(recv->name, recv->auth_token);
         
@@ -452,6 +457,10 @@ public:
         OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-connect-client hit\n";
+        }
+
         // Function Call
         string auth_token;
         string error = do_connect_client(recv->name, recv->password, auth_token);
@@ -476,6 +485,10 @@ public:
         OATPP_ASSERT_HTTP(recv->category_name, Status::CODE_400, "'category_name' is require!");
         OATPP_ASSERT_HTTP(recv->add_name, Status::CODE_400, "'add_name' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-add-client hit\n";
+        }
+
         // Function Call
         string error = do_add_client(recv->name, recv->auth_token, recv->category_name, recv->add_name);
         
@@ -497,6 +510,10 @@ public:
         OATPP_ASSERT_HTTP(recv->key_schema, Status::CODE_400, "'key_params' is require!");
         OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
         
+        if (DEBUG) {
+            std::cout << "/db-create-category hit\n";
+        }
+
         // Function Call
         string error = do_create_category(recv->name, recv->auth_token, recv->category_name, recv->key_schema, recv->value_schema);
         
@@ -511,6 +528,11 @@ public:
         info->addResponse<Object<ListClientsRespDto>>(Status::CODE_200, "application/json");
     }
     ENDPOINT("GET", "/db-list-clients", list_clients) {
+
+        if (DEBUG) {
+            std::cout << "/db-list-clients hit\n";
+        }
+
         // Function Call
         string clients;
         string error = do_list_clients(clients);
@@ -527,6 +549,11 @@ public:
         info->addResponse<Object<ListCategoriesRespDto>>(Status::CODE_200, "application/json");
     }
     ENDPOINT("GET", "/db-list-categories", list_categories) {
+        
+        if (DEBUG) {
+            std::cout << "/db-list-categories hit\n";
+        }
+
         // Function Call
         string categories;
         string error = do_list_categories(categories);

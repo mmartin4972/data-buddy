@@ -14,6 +14,8 @@
 #ifndef Common_hpp
 #define Common_hpp
 
+#define DEBUG 1
+
 //////////////////////
 //
 // ALIAS DEFINITIONS

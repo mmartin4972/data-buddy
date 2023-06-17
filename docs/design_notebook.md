@@ -419,4 +419,82 @@ TODO:
     - Figure out managing the json strings
     - Potentially switch to a different server framework
     - Track resource utilization and figure out how threading works for this thing
+    - Uses tasks.json to make it easier to build your file. Also have a more consistent way of managing json, python, and c++ when it comes to building. Need some kind of package manager or place where library files are kept. Don't want to be copying APIs all over the place.
+    - You will want your server to suppport https or some sort of client to server encryption that way you are safe from MITM attacks
 - At this time however, the MVP has been implemented. I will come back and do these fixes at a later time or as necessary. In the meanwhile I am going to focus on the next phase of the project which are the information retrieval programs.
+
+## 6/13/23
+- I believe that scraping data from Amazon will be the most beneficial to focus on since a high volume of items purchased by individuals are bought on Amazon, so being able to scrape information off of their could be very beneficial to people.
+- Amazon Data Scraping options:
+    - Request CSV of Order History:
+        - Go Here: https://www.amazon.com/gp/privacycentral/dsar/preview.html
+        - Select Your Orders and Hit Request
+        - Click in the confirmation email
+        - Wait up to 1 MONTH for data to be sent to you
+    - Scrape website from viewer perspective
+        - Seems to be a way in which one can use a plugin to inject code into a website and then simulate a click: https://stackoverflow.com/questions/11387615/how-can-i-make-a-chrome-extension-automatically-click-a-button-when-a-page-loads
+        - Could rapidly click through all orders to extract order information
+        - Would be nicer if we could do this for continual updates
+        - Could then just ask the user to navigate to the page and we can take it away
+        - Would need to remind the user that they need to update their information or something along these lines and make it incredibly easy for the user to navigate to these pages
+        - Can avoid saving passwords and just have the user navigate to the pages and perform logins
+- Future sites to extract data from:
+    - Costco
+    - Target
+    - Aldi?
+    - Jewel Osco
+    - Comerica
+    - Vanguard
+    - Coinbase
+    - Intuit Mint
+- Goal: create an inflation calculator that will compute how the price of similar goods has changed for you month to month as well as tells you amount spent on groceries, etc.
+
+
+## 6/14/23
+- Objectives for today are:
+    - [ ] Get a popup page to appear when you click the extension
+    - [ ] Have a button in the popup that when you click the button it runs a script
+    - [ ] Have the script click a button on the amazon orders page, that will take you to see more details about an order
+    - [ ] Once you reach the order page just have a script automatically run, which switches back to the previous page
+- Extension Notes:
+    - Files specified in the background cause the main DOM to be executed in the background
+    - If you include an html file in the action parameter the html you specified will be rendered in a window that is at least 25x25 and cannot be larger than 800x600.
+    - I don't think that I want the background attribute right now. I think I want the popup attribute right now, and will then just click the button to start the data extraction
+    - It seems that the action API is the primary API for interfacing with the extension that appears on the bar
+    - Outside of this action API there are ways that the extension is able to interface with the browser
+    - In order for things to log to the console you have to generate an html popup and then select inspect on that popup NOT ON THE PAGE
+    - The action API can also be used to display the popup
+    - Web_accessible_resources allows me to specify which files from the root directory are part of the project, so that they can be imported and referenced for extension use
+    - I hate manifest.json. It is complete bullshit and doesn't follow any coding paradigms
+    - Consequently, I am going to set the whole thing up as a background.js file and have this be the main file an then use the action API to make all of my calls into things
+    - By convention I am going to start all paths with ./ so that I can be consistent and easily find files relative to the root directory
+    - It seems that many things have changed in V3 from V2, which is a bit of a pain, since there are less docs on it, however, I'll live
+    - In order to allow calls to external sites you need to set the host_permissions in the manifest.json file which will allow you to make requests to the server that you are running locally
+6/15/23
+- Goals for today:
+    - [ ] Look into Visual Studio code experimental and see if you can enable github copilot chat
+    - [ ] Research existing Amazon order web scraping plugins and maybe use one of these instead
+    - [ ] Consider automating the web scraping process. Can it be done through ML? Can we develop some sort of trainable user interactive one where the user does one cell and then it does the rest and keeps doing it every time the site is visited? Could also have the existing plugin highlight things in the DOM that it extracts so that people know exactly what it is extarcting and can monitor its progress.
+    - [ ] Debug why the get-list-clients command is crashing the data buddy server
+- I managed to download all of my personal data from Amazon. It was a bit of a pain, but the downloaded data file does have all of the information I want formatted how I want it, so this is something to consider. If your product is targeting more technical users this may be a good first step. You could just have some sort of guide that allows them to download their Amazon order history. I think the added value of your product however will be its ability to extract information as people visit and use sites. This may be a great thing for new users to do for setup, but then afterwards it would be nice if the plugin was able to register new purchases or something along these lines.
+- If you wanted to have some sort of data validation you would need to talk with the companies that are providing the sites generating the data and have them verify that your data was successfully verified
+- Alternative Amazon Web Scrapers
+    - https://www.scrapingbee.com/scraperapi-alternative/?utm_source=google&utm_medium=cpc&utm_campaign=11870883009&utm_term=scraper%20api&gclid=Cj0KCQjw7aqkBhDPARIsAKGa0oISFWtybLoUyVWohujW9YHObqMgJUz75beTBvP464lu-pvn38cqCmEaAvRUEALw_wcB
+        - Doesn't seem very powerful or able to be tailored
+        - Just seems like this API that you give it a url and it returns you the fully rendered web page
+        - I can have my extension get to the web page. I need a way of processing the info on the web page
+    - https://www.asinspotlight.com/?utm_source=google&utm_medium=cpc&utm_campaign=19343361988&utm_content=141975517622&utm_term=amazon%20data%20scraper&gclid=Cj0KCQjw7aqkBhDPARIsAKGa0oIJjLQbnu8hTyxYK6t5hNLXcRPHJiEpAlt528NIGpYiqIUixgoFhjwaApfREALw_wcB#section-research
+        - Above is another alternative however they as well don't have any support for scraping user data, it is just general Amazon site data and pages that do not require login for scraping
+    - This appears to do exactly what I want: https://github.com/philipmulcahy/azad
+    
+- After inspecting the code associated with the Amazon web page I don't think it will be too difficult to manually scrape it. The more challenging part is going to be navigating to various pages to extract information. Also, are you going to have to query the database, so that you can validate what you have acquired and what you haven't? May not be able to make this thing write only.
+- Server is crashing after attempting to access a database even though it hasn't been initialized. I need to add a check that makes sure the database is initialized before continuing.
+- I also need to see if there is a way to have a subsection of an external git repository in my repository. I don't want the whole thing, just a subset.
+
+## 6/16/23
+- The current plan is to add a button to azad, which will automatically write the found data to data buddy
+- Once the button is added we are going to develop a consumer which we can then use to play with the data that we gathered
+- chrome.runtime api is used for message passing between extensions and different scripts running within the extensions
+- I will want to create a .git/info/sparse-checkout file and add it to my amazon web scraper. This sparse-checkout will extract files from the azad github repository. I will use their processing files, but then build a new UI and interaction system on top of his processing files. When he rolls out updates I want to have a script that is just going to be able to pull the updates and the sparse-checkout will surely enable me to do this
+
+## 6/17/23
