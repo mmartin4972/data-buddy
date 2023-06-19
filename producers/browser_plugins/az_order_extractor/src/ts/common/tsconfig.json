@@ -1,0 +1,12 @@
+// tsconfig for common
+{
+    "extends": "../tsconfig.json", // inherent from above config
+
+    // override these
+    "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "../../../dist/js/common", // compile to dist/common
+        "resolveJsonModule": true,
+        "composite": true
+    },
+}
