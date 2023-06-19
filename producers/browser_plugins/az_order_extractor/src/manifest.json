@@ -21,7 +21,7 @@
       "default_popup": "html/popup.html" 
     },
     "background": {
-       "service_worker": "background.js",
+       "service_worker": "js/background.bundle.js",
        "type": "module"
     },
     "web_accessible_resources": [
@@ -52,7 +52,7 @@
               "https://www.amazon.nl/*"
           ],
           "js": [
-              "inject.js"
+              "js/inject.bundle.js"
           ]
       }
     ]

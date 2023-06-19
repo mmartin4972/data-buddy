@@ -5,8 +5,8 @@
        "target": "es6",
        "esModuleInterop": true,
        "sourceMap": true,
-       "rootDir": "src",
+       "rootDir": ".",
        "noEmitOnError": true,
-       "typeRoots": [ "node_modules/@types" ],
+       "typeRoots": [ "../../../node_modules/@types" ],
     }
 }

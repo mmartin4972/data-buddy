@@ -3,8 +3,6 @@ const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
    mode: "production",
    entry: {
-      background: path.resolve(__dirname, "src", "ts", "background", "background.ts"),
-      inject: path.resolve(__dirname, "src", "ts", "inject", "inject.ts"),
       popup: path.resolve(__dirname, "src", "ts", "popup", "popup.ts"),
    },
    output: {
