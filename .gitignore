@@ -7,3 +7,5 @@ service/json-3.11.2
 service/json-schema-validator
 service/third_party
 service/tests/__pycache__
+**/node_modules
+**/dist

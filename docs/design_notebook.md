@@ -503,3 +503,21 @@ TODO:
 - azad_order.getOrdersByRange may be the function that I would like to use and define for my interface
 - I think order.ts and item.ts are the two important files that are doing all of the extraction
 - git worktree add and git sparse checkout seem like a pain in the ass. I am just going to write a bash script, which clones the whole thing, copies out the files that I want, and then deletes the whole thing
+- azad seems really slow. Rewriting in rust may be a move
+
+## 6/18/23
+- Am going to develop the web extension in typescript since that is best practice. Am setting up the extension folder using these guidelines: https://betterprogramming.pub/creating-chrome-extensions-with-typescript-914873467b65
+- webpack bundles and compresses js and ts files for production use
+
+## 6/19/23
+- The structure that I have for the browser_plugins should be consistent across projects. I want every folder in the ts folder to be reduced to a single file and then included by manifest.json.
+- All other files in the src directory should get copied
+- All the setup and testing scripts should be outside of the src directory
+- All output files are going to be written to the dist directory
+- You should not compile the code in a docker container, but should do this web development stuff on the local system. Compilation is significantly faster on the local system and containerization isn't that important since all installs are well managed by npm and the application itself is running inside a container, which is the browser, so you shouldn't be making too many edits to the filesystem.
+- The purpose of the service worker is to run in the background, manage network requests, deal with caching resources, and not interface with the DOM of the webpage (Web assembly is a good candidate for replacing this file)
+- Context scripts have access to the DOM and are meant to interface directly with the webpage. They can then use chrome.Runtime ports to communicate with the service worker so as to have it handle network requests and the like. They are injected into specific web pages for processing. You should have a file that manages the popup 
+- Should also have a popup.js containing all of the js for the popup that is created
+- These should be the only 3 files that are generated in the dist directory: control.js, inject.js, background.js and these should be the only 3 folders in the ts directory in src
+- Add definnitions defining the purpose of each of these files
+- 
