@@ -5,10 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run build-b && npm run build-i && npm run build-p",
-    "build-b": "webpack --config webpack.config.background.js",
-    "build-i": "webpack --config webpack.config.inject.js",
-    "build-p": "webpack --config webpack.config.popup.js"
+    "build": "webpack --config webpack.config.js"
   },
   "keywords": [],
   "author": "",

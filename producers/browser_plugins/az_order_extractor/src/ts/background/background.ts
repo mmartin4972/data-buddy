@@ -2,7 +2,7 @@
 // Use Chrome ports to communicate with the injection script and the popup window
 
 import * as service from "./service_api_lib";
-import * as common from "../common/common";
+import * as common from "../common";
 let popup_port: chrome.runtime.Port;
 let inject_port: chrome.runtime.Port;
 let buddy: service.Buddy;
