@@ -3,19 +3,22 @@
 'use strict';
 
 const $ = require('jquery');
-const common = require('../common');
+import * as common from '../common';
 
 // GLOBALS
 let background_port: chrome.runtime.Port;
-const scrape_btn = document.getElementById("scrape_btn");
-const connect_form = document.getElementById("connect_form");
-const create_form = document.getElementById("create_form");
-const disconnect_btn = document.getElementById("disconnect_btn");
+const scrape_btn = document.getElementById("scrape_btn")!;
+const connect_form = document.getElementById("connect_form")!;
+const create_form = document.getElementById("create_form")!;
+const disconnect_btn = document.getElementById("disconnect_btn")!;
 const status_icon = document.getElementById("status_icon")!;
+const order_count = document.getElementById("order_count")!;
+const order_line = document.getElementById("order_line")!;
+const error_display = document.getElementById("error_display")!;
 
 
 // HELPERS
-function send_message_to_background(message: any) {
+function send_message_to_background(message: common.Message) {
     background_port.postMessage(message);
 }
 
@@ -24,77 +27,104 @@ function popup_log(...args: any[]) {
     console.log(...args);
 }
 
-function set_status(connected: boolean) {
-    if (connected) {
-        status_icon.classList.remove("disconnected");
-        status_icon.classList.add("connected");
-        disconnect_btn!.style.display = "block";
-        scrape_btn!.style.display = "block";
-        create_form!.style.display = "none";
-        connect_form!.style.display = "none";
-    } else {
-        status_icon.classList.remove("connected");
-        status_icon.classList.add("disconnected");    
-        disconnect_btn!.style.display = "none";
-        scrape_btn!.style.display = "none";
-        create_form!.style.display = "block";
-        connect_form!.style.display = "block";
+// State Transition Functions
+
+function enter_disconnected_state() {
+    status_icon.classList.remove("connected");
+    status_icon.classList.add("disconnected");    
+    disconnect_btn.style.display = "none";
+    scrape_btn.style.display = "none";
+    create_form.style.display = "block";
+    connect_form.style.display = "block";
+    order_line.style.display = "none";
+    order_count.style.display = "none";
+    error_display.style.display = "none"; 
+}
+
+function enter_connected_wait() {
+    status_icon.classList.remove("disconnected");
+    status_icon.classList.add("connected");
+    disconnect_btn.style.display = "block";
+    scrape_btn.style.display = "block";
+    create_form.style.display = "none";
+    connect_form.style.display = "none";
+    order_line.style.display = "none";
+    order_count.style.display = "none";
+    error_display.style.display = "none";
+}
+
+function enter_connected_scrape_state() {
+    status_icon.classList.remove("disconnected");
+    status_icon.classList.add("connected");
+    disconnect_btn.style.display = "block";
+    scrape_btn.style.display = "block";
+    create_form.style.display = "none";
+    connect_form.style.display = "none";
+    order_line.style.display = "block";
+    order_count.style.display = "block";
+    error_display.style.display = "none";
+}
+
+// EVENT HANDLERS
+function recv_background_message(message: common.Message) {
+    switch (message.type) {
+        case common.RespPopupMessageType.StateChange:
+            switch(message.data["state"]) {
+                case common.PopupState.Disconnected:
+                    enter_disconnected_state();
+                    break;
+                case common.PopupState.ConnectedWait:
+                    enter_connected_wait();
+                    break;
+                case common.PopupState.ConnectedScrape:
+                    enter_connected_scrape_state();
+                    break;
+            }
+            break;
+        case common.RespPopupMessageType.DisplayError:
+            error_display.style.display = "block";
+            error_display.innerText = message.data["error"];
+            break;
+        case common.RespPopupMessageType.OrderCountUpdate:
+            order_count.innerText = message.data["count"];
+            break;
+        default:
+            popup_log("Unknown message type from background: ", message);
+            break;
     }
 }
 
-
-// INITIALIZERS
-function add_event_listeners() {
-    create_form?.addEventListener("submit", form_submitted);
-    connect_form?.addEventListener("submit", form_submitted);
-    disconnect_btn?.addEventListener("click", disconnect_btn_clicked);
-    scrape_btn?.addEventListener("click", scrape_btn_clicked);
-    background_port.onMessage.addListener(recv_background_message);
-}
-
-
-// EVENT HANDLERS
-function scrape_btn_clicked() {
-    popup_log("Button clicked!"); // Test if the event listener is working correctly
-    // Send a message to the background service worker
-    send_message_to_background({message: "Hello from the popup!"});
-}
-
-function recv_background_message(message: any) {
-    popup_log("Message from background:", message);
-}
-
-function form_submitted(event: Event) {
+async function form_submitted(event: Event) {
     popup_log(event)
     event.preventDefault(); // Prevent the form from submitting
     let triggered_id = (event.target as HTMLFormElement)!.id;
     let path = (document.getElementById(triggered_id) as HTMLInputElement)!.value;
 
     if (triggered_id === "connect_form") {
-        popup_log("Connect submitted");
-        // TODO: Error handling
-        send_message_to_background({type: common.RecvPopupMessage.Connect, data: {path: path}});
+        send_message_to_background({type: common.RecvPopupMessageType.Connect, data: {path: path}});
     } else if (triggered_id === "create_form") {
-        send_message_to_background({type: common.RecvPopupMessage.Create, data: {path: path}});
-    } else {
-        popup_log("Unknown form submitted: ", triggered_id);
+        send_message_to_background({type: common.RecvPopupMessageType.Create, data: {path: path}});
     }
-
-    set_status(true);
 }
 
-function disconnect_btn_clicked() {
-    set_status(false);
-    send_message_to_background({type: common.RecvPopupMessage.Disconnect, data: {}}); // TODO: maybe error handling?
+async function disconnect_btn_clicked() {
+    send_message_to_background({type: common.RecvPopupMessageType.Disconnect, data: {}}); // TODO: maybe error handling?
 }
 
+async function scrape_btn_clicked() {
+    send_message_to_background({type: common.RecvPopupMessageType.Scrape, data: {}});
+}
 
 // MAIN
 function init() {
     popup_log("Popup window loaded!");
-    set_status(false);
+    enter_disconnected_state();
     background_port = chrome.runtime.connect({name: "popup"}); // Can specify extension ID, so only need to specify popup, inject, or background
-    add_event_listeners(); // Make sure that cannot click button before connected to background
+    background_port.onMessage.addListener(recv_background_message);
+    create_form?.addEventListener("submit", form_submitted);
+    connect_form?.addEventListener("submit", form_submitted);
+    disconnect_btn?.addEventListener("click", disconnect_btn_clicked);
+    scrape_btn?.addEventListener("click", scrape_btn_clicked);
 }
   
 $(document).ready( () => init() );

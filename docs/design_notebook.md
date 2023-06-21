@@ -543,3 +543,8 @@ TODO:
 ## 6/20/23
 - In my extension I am not going to give people the option to create a data buddy instance. Instead they are only going to be able to connect to one or disconnect from one. Creating the instance will be reserved for the service manager that I will develop later on. For dev purposes, however, I may add a create button
 - May want to add some sort of ping function for the extension to check the status of the local service.
+- There are several states that a popup can be in that must be encoded
+    - Waiting to connect
+    - Connected not scraping
+    - Connected and scraping
+- The background will control which state the popup is in. The state that the popup is in will determine what messages it is able to send to the background

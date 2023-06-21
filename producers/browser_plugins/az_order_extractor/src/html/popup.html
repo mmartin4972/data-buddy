@@ -8,6 +8,7 @@
 <body>
   <h1>Amazon Order Extractor</h1>
   <span id="status_icon" class="disconnected">[STATUS]</span>
+  <p id="order_line">Orders Recovered <span id="order_count">0</span>.</p>
   <form id="create_form">
     <label for="name">Path:</label>
     <input type="text" id="create_path" name="name" required>
@@ -21,5 +22,6 @@
   </form>
   <button id="disconnect_btn">Disconnect Buddy</button>
   <button id="scrape_btn">Run Amazon</button>
+  <span id="error_display"></span>
 </body>
 </html>

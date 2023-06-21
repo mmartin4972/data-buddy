@@ -8,16 +8,22 @@ async function post_json(url: string, data: any): Promise<Response> {
         body: JSON.stringify(data),
     })
     .then(async function (res: any) {
-        await res.json()
-        .then(function (json: any) {
+        await res.text()
+        .then(function (parsed: any) {
+            let json: any;
+            try {
+                json = JSON.parse(parsed);
+            } catch (error) {
+                throw new Error("Trouble parsing following as JSON. " + parsed);
+            }
             response = new Response(res.status, json);
         })
         .catch(function (err: any) {
-            response = new Response(res.status, err);
+            response = new Response(res.status, {"error": "Trouble parsing as text. " + err});
         });
     })
     .catch(function (err: any) {
-        response = new Response(500, err);
+        response = new Response(500, {"error": "Trouble fetching. " + err});
     });
     return response;
 }
@@ -87,7 +93,7 @@ export class Buddy {
 
     async create(path: string): Promise<Response> {
         let data: any = {
-            'path': path,
+            'path': path
         }
         let res = await post_json(this.url + '/db-create-buddy', data);
         if (res.status_code === 200) {
@@ -102,7 +108,7 @@ export class Buddy {
             p = path;
         }
         let data: any = {
-            'path': p,
+            'path': p
         }
         return await post_json(this.url + '/db-connect-buddy', data);
     }
