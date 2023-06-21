@@ -520,4 +520,26 @@ TODO:
 - Should also have a popup.js containing all of the js for the popup that is created
 - These should be the only 3 files that are generated in the dist directory: control.js, inject.js, background.js and these should be the only 3 folders in the ts directory in src
 - Add definnitions defining the purpose of each of these files
-- 
+- Adding a question mark at the end of a variable name in typescript indicates that if it is null, then don't interact with the thing and thrown an error
+- Adding an exlcamation point at the end of a variable name in typescript is an assert that guarantees an element is not null and will thrown an error if otherwise
+- Going to use project references and restructure accordingly so that typescript files in background, popup, and inject are treated separately
+    - https://www.typescriptlang.org/docs/handbook/project-references.html
+- In order for each of background, inject, and popup to be compiled and checked separately I had to create a tsconfig.json and a webpack.config.x.js for each. Now simply running npm run build will build all 3 separate projects. To save time you can elect to recompile just one of the projects pretty easily.
+- Webpack seems to require an entry point. I was unsuccessful in getting it compile without one
+- It is best practice in javascript to use the let keyword when declaring variables since the var keyword is not properly scoped
+- For the sake of code organization I have been trying hard to properly configure my tsconfig files. However, I now realize after viewing this issue that I can configure the project in a modular way using the tsc loader, however, webpack tries to use tsc loader under the hood, but is fucking it up and I cannot properly configure my webpack.config.js file.
+    - https://github.com/TypeStrong/ts-loader/issues/647
+- Consequently, I am just going to use one tsconfig file and an going to build all 3 separate modules together using one tsconfig. I know that this will work, however, it will also lead the program that think that they are all part of one library, which is not true, however, it won't have a huge effect since webpack is going to split them apart into separate libraries. I just need tsc to compile all of the code together and then webpack will go through and break things apart.
+- Webpack bundles and tsc transpiles. You can configure tsc in a way that it transpiles 3 separate modules that all depend on one another, but when webpack uses tsc for transiplation you cannot configure tsc in this way.
+- I have been getting overwhelmed with how daunting a task making this extension seems like it will be. I am going to break it down into smaller more manageable pieces, which will help me better quantify progress as well as motivate me to continue working on the project.
+- Plan
+    - [ ] Setup the repo
+    - [ ] Develop a library that will abstract away the API for interfacing with the data buddy service
+    - [ ] Develop an interface for the background.ts that the inject.ts will be able to communicate with and that can speak with the server
+    - [ ] Develop the code that is going to leverage the web scraping files from azad and will then extract the scraped information and send it to the background, so that the background can write it to disk
+    - [ ] Develop the popup so that it will show you the progress of the data extraction. Should only have a progress bar and a go button. It should also show the location of the data buddy folder being written to.
+- There is a way to make storage persist across instances of the extension. I should use the across device storage for storing the extension credentials. I should use local storage for storing the database path.
+
+## 6/20/23
+- In my extension I am not going to give people the option to create a data buddy instance. Instead they are only going to be able to connect to one or disconnect from one. Creating the instance will be reserved for the service manager that I will develop later on. For dev purposes, however, I may add a create button
+- May want to add some sort of ping function for the extension to check the status of the local service.

@@ -1,11 +1,45 @@
-function post_json(url: string, data: any) {
-    return fetch(url, {
+async function post_json(url: string, data: any): Promise<Response> {
+    let response: Response = new Response(500, {});
+    await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+    })
+    .then(async function (res: any) {
+        await res.json()
+        .then(function (json: any) {
+            response = new Response(res.status, json);
+        })
+        .catch(function (err: any) {
+            response = new Response(res.status, err);
+        });
+    })
+    .catch(function (err: any) {
+        response = new Response(500, err);
     });
+    return response;
+}
+
+async function get_json(url: string): Promise<Response> {
+    let response: Response = new Response(500, {});
+    await fetch(url, {
+        method: 'GET'
+    })
+    .then(async function (res: any) {
+        await res.json()
+        .then(function (json: any) {
+            response = new Response(res.status, json);
+        })
+        .catch(function (err: any) {
+            response = new Response(res.status, err);
+        });
+    })
+    .catch(function (err: any) {
+        response = new Response(500, err);
+    });
+    return response;
 }
 
 export class Client {
@@ -28,6 +62,16 @@ export class Client {
 
 }
 
+export class Response {
+    status_code: number;
+    data: any;
+
+    constructor(status_code: number, data: any) {
+        this.status_code = status_code;
+        this.data = data;
+    }
+}
+
 export class Buddy {
     url: string;
     path: string;
@@ -41,15 +85,29 @@ export class Buddy {
         }
     }
 
-    async create(path: string) {
+    async create(path: string): Promise<Response> {
         let data: any = {
             'path': path,
         }
         let res = await post_json(this.url + '/db-create-buddy', data);
-        if (res.ok) {
-            let json = await res.json();
-            this.path = json['path'];
+        if (res.status_code === 200) {
+            this.path = res.data['path'];
         }
         return res;
+    }
+
+    async connect(path?: string): Promise<Response> {
+        let p = this.path;
+        if (typeof path !== 'undefined') {
+            p = path;
+        }
+        let data: any = {
+            'path': p,
+        }
+        return await post_json(this.url + '/db-connect-buddy', data);
+    }
+
+    async disconnect(): Promise<Response> {
+        return await get_json(this.url + '/db-disconnect-buddy');
     }
 }

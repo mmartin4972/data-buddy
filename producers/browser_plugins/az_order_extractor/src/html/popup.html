@@ -3,8 +3,23 @@
 <head>
   <title>Button Example</title>
   <script type="module" src="../js/popup.bundle.js"></script>
+  <link rel="stylesheet" href="../css/popup.css">
 </head>
 <body>
-  <button id="amazonButton">Run Amazon</button>
+  <h1>Amazon Order Extractor</h1>
+  <span id="status_icon" class="disconnected">[STATUS]</span>
+  <form id="create_form">
+    <label for="name">Path:</label>
+    <input type="text" id="create_path" name="name" required>
+    <input type="submit" value="Create">
+  </form>
+  <form id="connect_form">
+    <label for="name">Path:</label>
+    <input type="text" id="connect_path" name="name" required>
+    
+    <input type="submit" value="Connect">
+  </form>
+  <button id="disconnect_btn">Disconnect Buddy</button>
+  <button id="scrape_btn">Run Amazon</button>
 </body>
 </html>

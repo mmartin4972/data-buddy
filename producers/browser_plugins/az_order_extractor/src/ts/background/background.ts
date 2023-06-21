@@ -17,31 +17,48 @@ function background_log(...args: any[]) {
 // Listen for messages from the popup window
 function init() {
     // Listen for messages from the popup window and injection script
+    background_log("Adding listeners");
     chrome.runtime.onConnect.addListener(function(newPort: chrome.runtime.Port) {
         if (newPort.name === common.Port.Popup) { // TODO: maybe have some common file and make this an enum
             popup_port = newPort;
-            background_log("Popup connected!");
             popup_port.onMessage.addListener(recv_popup_message);
-            popup_port.postMessage({message: "Hello from the background!"});
-        } else if (newPort.name === "inject") {
+        } else if (newPort.name === common.Port.Inject) {
             inject_port = newPort;
-            background_log("Injection script connected!");
-            inject_port.onMessage.addListener(function(message: any) {
-                background_log("Message from injection script:" + String(message));
-            });
-            inject_port.postMessage({message: "Hello from the background!"});
+            inject_port.onMessage.addListener(recv_inject_message);
+        } else {
+            background_log("Unknown port: ", newPort);
         }
     })
+    background_log("Connecting to buddy");
+    buddy = new service.Buddy(common.BUDDY_URL);
 }
 
 // EVENT HANDLERS
-function recv_popup_message(message: any) {
+async function recv_popup_message(message: common.Message) {
     switch (message.type) {
-        case "create_db":
-            buddy = new service.Buddy("http://localhost:8787");
+        case common.RecvPopupMessage.Create:
+            background_log("create from popup: ", await buddy.create(message.data["path"]))
+            break;
+        case common.RecvPopupMessage.Connect:
+            background_log("connect from popup: ", await buddy.connect(message.data["path"]));
+            break;
+        case common.RecvPopupMessage.Disconnect:
+            background_log("disconnect from popup: ", await buddy.disconnect());
             break;
         default:
-            background_log("Unknown message type: " + String(message.type));
+            background_log("Unknown message type: ", message);
+            break;
+    }
+}
+
+function recv_inject_message(message: common.Message) {
+    switch (message.type) {
+        case common.RecvInjectMessage.Put:
+            break;
+        case common.RecvInjectMessage.RangePut: // maybe unnecessary
+            break;
+        default:
+            background_log("Unknown message type: ", message);
             break;
     }
 }

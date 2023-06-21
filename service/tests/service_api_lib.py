@@ -1,4 +1,3 @@
-
 import requests
 import json
 from typing import TypeVar
@@ -75,8 +74,11 @@ class Buddy:
             self.path = res.json()['folder_path']
         return res
             
-    def connect(self):
-        return requests.post(self.url + '/db-connect-buddy', json={"path": self.path})
+    def connect(self, path: str = ""):
+        p = self.path
+        if path != "":
+            p = path
+        return requests.post(self.url + '/db-connect-buddy', json={"path": p})
 
     def disconnect(self):
         return requests.get(self.url + '/db-disconnect-buddy')

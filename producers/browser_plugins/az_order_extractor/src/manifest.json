@@ -11,7 +11,8 @@
       "scripting", 
       "activeTab", 
       "tabs",
-      "background"
+      "background",
+      "storage"
     ],
     "host_permissions": [
       "<all_urls>"

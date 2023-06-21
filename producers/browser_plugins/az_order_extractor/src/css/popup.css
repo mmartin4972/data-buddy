@@ -1,0 +1,14 @@
+.status-icon {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.connected {
+    background-color: green;
+}
+
+.disconnected {
+    background-color: red;
+}
