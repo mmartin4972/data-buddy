@@ -548,3 +548,4 @@ TODO:
     - Connected not scraping
     - Connected and scraping
 - The background will control which state the popup is in. The state that the popup is in will determine what messages it is able to send to the background
+- I had to make the API abstract away the fact that oatpp errors are returned as strings while data buddy errors are returned as json objects. The service_api_lib has alot of code for handling this unfortunately. Everything should be able to be parsed as text. I may want to just return text or I can be chill with returning the json.

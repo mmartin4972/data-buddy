@@ -98,11 +98,11 @@ async function form_submitted(event: Event) {
     popup_log(event)
     event.preventDefault(); // Prevent the form from submitting
     let triggered_id = (event.target as HTMLFormElement)!.id;
-    let path = (document.getElementById(triggered_id) as HTMLInputElement)!.value;
-
     if (triggered_id === "connect_form") {
+        let path = (document.getElementById("connect_path") as HTMLInputElement)!.value;
         send_message_to_background({type: common.RecvPopupMessageType.Connect, data: {path: path}});
     } else if (triggered_id === "create_form") {
+        let path = (document.getElementById("create_path") as HTMLInputElement)!.value;
         send_message_to_background({type: common.RecvPopupMessageType.Create, data: {path: path}});
     }
 }
