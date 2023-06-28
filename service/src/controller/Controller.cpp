@@ -601,3 +601,14 @@ string Controller::do_check_authenticated(const string& name, const string& auth
     return error;
 }
 
+string Controller::do_check_buddy_connected(bool& is_connected) {
+    string error = "";
+    try {
+        is_connected = is_buddy_connected();
+    }
+    catch (const std::runtime_error& e) {
+        error = e.what();
+    }
+    return error;
+}
+

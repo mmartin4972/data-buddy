@@ -135,5 +135,8 @@ class Buddy:
     def ping(self):
         return requests.get(self.url + '/db-ping')
     
+    def is_connected(self):
+        return requests.get(self.url + '/db-check-buddy-connected')
+    
     
     

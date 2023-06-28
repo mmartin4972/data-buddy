@@ -230,6 +230,11 @@ public:
     */
    string do_check_authenticated(const string& name, const string& auth_token, bool& is_authenticated);
 
+    /**
+     * @param is_connected: boolean that is set to true if buddy is connected, false if not
+     */
+    string do_check_buddy_connected(bool& is_connected);
+    
     ////////////////////////
     //
     // Oat++ Endpoint Code
@@ -596,6 +601,21 @@ public:
 
         auto dto = CheckAuthenticatedRespDto::createShared();
         dto->is_authenticated = is_authenticated;
+        dto->error = error;
+        return create_response(error, dto);
+    }
+
+    ENDPOINT_INFO(check_buddy_connected) {
+        info->summary = "Check if a buddy is connected";
+        info->addResponse<Object<CheckBuddyConnectedRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("GET", "/db-check-buddy-connected", check_buddy_connected) {
+
+        bool is_connected = false;
+        string error = do_check_buddy_connected(is_connected);
+
+        auto dto = CheckBuddyConnectedRespDto::createShared();
+        dto->is_connected = is_connected;
         dto->error = error;
         return create_response(error, dto);
     }

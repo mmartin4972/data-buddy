@@ -425,6 +425,31 @@ def ping_and_is_authenticated(path) :
     check_success(b.disconnect())
     check_success(b.ping())
 
+def check_buddy_connected(path) :
+    b = Buddy("http://localhost:8787")
+    check_success(b.ping())
+    res = b.is_connected()
+    check_success(res)
+    assert(res.json()['is_connected'] == False)
+    check_success(b.create(path))
+    res = b.is_connected()
+    check_success(res)
+    assert(res.json()['is_connected'] == True)
+    check_success(b.disconnect())
+    res = b.is_connected()
+    check_success(res)
+    assert(res.json()['is_connected'] == False)
+    check_success(b.connect())
+    check_success(b.ping())
+    res = b.is_connected()
+    check_success(res)
+    assert(res.json()['is_connected'] == True)
+    check_fail(b.connect())
+    res = b.is_connected()
+    check_success(res)
+    assert(res.json()['is_connected'] == False)
+    check_success(b.ping())
+
 test = ""
 if len(sys.argv) > 1:
     test = sys.argv[1]   
@@ -469,7 +494,8 @@ func_list = [test_endpoint_1,
             add_client_to_category_success,
             get_put,
             get_range_put,
-            ping_and_is_authenticated
+            ping_and_is_authenticated,
+            check_buddy_connected
             ]
 try:
 # Run the service

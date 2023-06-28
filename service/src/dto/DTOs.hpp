@@ -176,6 +176,12 @@ class CheckAuthenticatedRespDto : public oatpp::DTO {
     DTO_FIELD(String, error);
 };
 
+class CheckBuddyConnectedRespDto : public oatpp::DTO {
+    DTO_INIT(CheckBuddyConnectedRespDto, DTO);
+    DTO_FIELD(Boolean, is_connected);
+    DTO_FIELD(String, error);
+};
+
 #include OATPP_CODEGEN_END(DTO)
 
 #endif /* DTOs_hpp */
