@@ -159,6 +159,23 @@ class ListCategoriesRespDto : public oatpp::DTO {
     // DTO_FIELD(String, category_schema); Don't think necessary since return all as json values
 };
 
+class PingRespDto : public oatpp::DTO {
+    DTO_INIT(PingRespDto, DTO);
+    DTO_FIELD(String, error);
+};
+
+class CheckAuthenticatedRecvDto : public oatpp::DTO {
+    DTO_INIT(CheckAuthenticatedRecvDto, DTO);
+    DTO_FIELD(String, name);
+    DTO_FIELD(String, auth_token);
+};
+
+class CheckAuthenticatedRespDto : public oatpp::DTO {
+    DTO_INIT(CheckAuthenticatedRespDto, DTO);
+    DTO_FIELD(Boolean, is_authenticated);
+    DTO_FIELD(String, error);
+};
+
 #include OATPP_CODEGEN_END(DTO)
 
 #endif /* DTOs_hpp */

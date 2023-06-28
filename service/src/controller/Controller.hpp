@@ -222,6 +222,14 @@ public:
     */
     string do_list_categories(string& categories);
 
+    /**
+     * @param name: name of the client
+     * @param auth_token: authentication token for the client
+     * @param is_authenticated: boolean that is set to true if client is authenticated, false if not
+     * RETURNS: empty string if successfully checked if client is authenticated, error message if not
+    */
+   string do_check_authenticated(const string& name, const string& auth_token, bool& is_authenticated);
+
     ////////////////////////
     //
     // Oat++ Endpoint Code
@@ -564,6 +572,34 @@ public:
         dto->categories = oatpp::String(categories.c_str(), categories.length());
         return create_response(error, dto);
     }
+
+    ENDPOINT_INFO(ping) {
+        info->summary = "Ping the server";
+        info->addResponse<Object<PingRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("GET", "/db-ping", ping) {
+        auto dto = PingRespDto::createShared();
+        dto->error = "";
+        return create_response("", dto);
+    }
+
+    ENDPOINT_INFO(check_authenticated) {
+        info->summary = "Ping the server and check if authenticated";
+        info->addConsumes<Object<CheckAuthenticatedRecvDto>>("application/json");
+        info->addResponse<Object<CheckAuthenticatedRespDto>>(Status::CODE_200, "application/json");
+    }
+    ENDPOINT("POST", "/db-check-authenticated", check_authenticated,
+            BODY_DTO(Object<CheckAuthenticatedRecvDto>, recv)) {
+
+        bool is_authenticated = false;
+        string error = do_check_authenticated(recv->name, recv->auth_token, is_authenticated);
+
+        auto dto = CheckAuthenticatedRespDto::createShared();
+        dto->is_authenticated = is_authenticated;
+        dto->error = error;
+        return create_response(error, dto);
+    }
+
 };
 
 #include OATPP_CODEGEN_END(ApiController) //<-- End Codegen

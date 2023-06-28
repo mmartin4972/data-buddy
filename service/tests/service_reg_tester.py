@@ -405,7 +405,26 @@ def get_range_put(path) :
 
     check_success(b.disconnect())
     
-    
+def ping_and_is_authenticated(path) :
+    b = Buddy("http://localhost:8787")
+    c = Client("test client", "test_password", url="http://localhost:8787")
+    check_success(b.ping())
+    check_success(b.create(path))
+    check_success(b.ping())
+    res = c.is_authenticated()
+    check_success(res)
+    assert(res.json()['is_authenticated'] == False)
+    check_success(b.create_client(c))
+    res = c.is_authenticated()
+    check_success(res)
+    assert(res.json()['is_authenticated'] == True)
+    check_success(b.disconnect_client(c))
+    res = c.is_authenticated()
+    check_success(res)
+    assert(res.json()['is_authenticated'] == False)
+    check_success(b.disconnect())
+    check_success(b.ping())
+
 test = ""
 if len(sys.argv) > 1:
     test = sys.argv[1]   
@@ -449,7 +468,8 @@ func_list = [test_endpoint_1,
             unauthorized_calls,
             add_client_to_category_success,
             get_put,
-            get_range_put
+            get_range_put,
+            ping_and_is_authenticated
             ]
 try:
 # Run the service

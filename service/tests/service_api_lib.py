@@ -9,11 +9,11 @@ def raise_error(e, res):
 # Client can only be connected to one database at a time
 T = TypeVar('T', bound='Client')
 class Client:
-    def __init__(self, name="", password="", auth_token=""):
+    def __init__(self, name="", password="", auth_token="", url=""):
         self.name = name
         self.password = password
         self.auth_token = auth_token
-        self.url = ""
+        self.url = url
         
     def get(self, category, key) :
         data = {
@@ -61,6 +61,13 @@ class Client:
             'add_name': add_client.name
         }
         return requests.post(self.url + '/db-add-client', json=data)
+    
+    def is_authenticated(self):
+        data = {
+            'name': self.name,
+            'auth_token': self.auth_token
+        }
+        return requests.post(self.url + '/db-check-authenticated', json=data)
 
 # Class that is used for database wide operations that don't require authorization
 class Buddy:
@@ -124,6 +131,9 @@ class Buddy:
     
     def get_url(self):
         return self.url
+    
+    def ping(self):
+        return requests.get(self.url + '/db-ping')
     
     
     

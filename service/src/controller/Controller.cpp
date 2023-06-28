@@ -581,3 +581,23 @@ string Controller::do_list_categories(string& categories) {
     }
     return error;
 }
+
+string Controller::do_check_authenticated(const string& name, const string& auth_token, bool& is_authenticated) {
+    string error = "";
+    try {
+        // Validation Checks
+        if (!is_buddy_connected()) {
+            throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
+        }
+        if (is_client_authorized(name, auth_token)) { // Check the client is authorized to make this request
+            is_authenticated = true;
+        } else {
+            is_authenticated = false;
+        }
+    }
+    catch (const std::runtime_error& e) {
+        error = e.what();
+    }
+    return error;
+}
+
