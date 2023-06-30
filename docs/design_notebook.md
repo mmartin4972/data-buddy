@@ -421,6 +421,7 @@ TODO:
     - Track resource utilization and figure out how threading works for this thing
     - Uses tasks.json to make it easier to build your file. Also have a more consistent way of managing json, python, and c++ when it comes to building. Need some kind of package manager or place where library files are kept. Don't want to be copying APIs all over the place.
     - You will want your server to suppport https or some sort of client to server encryption that way you are safe from MITM attacks
+    - In ther server parameters and structs and classes should have members stored in decreasing order
 - At this time however, the MVP has been implemented. I will come back and do these fixes at a later time or as necessary. In the meanwhile I am going to focus on the next phase of the project which are the information retrieval programs.
 
 ## 6/13/23
@@ -549,3 +550,27 @@ TODO:
     - Connected and scraping
 - The background will control which state the popup is in. The state that the popup is in will determine what messages it is able to send to the background
 - I had to make the API abstract away the fact that oatpp errors are returned as strings while data buddy errors are returned as json objects. The service_api_lib has alot of code for handling this unfortunately. Everything should be able to be parsed as text. I may want to just return text or I can be chill with returning the json.
+- You are going to need to establish some sort of ping function on the server, so that the client can tell that it is still connected? For now, don't worry about that and just say it is connected until you get some sort of error message and then move to disconnected. Configure this in the background.ts file.
+- Do you know what happens if you send a create message to a directory that already has something? Does it delete everything or make something new?
+
+## 6/28/23
+- 
+
+# Ongoing List of Things TODO
+## Server
+    - Remove the db-test endpoint and the db-get-test endpoint
+    - Review and rewrite code
+    - Add error checking for all required parameters in endpoint functions in Controller.hpp
+    - Figure out how to get the AES key string from the environment instead of just reading it from the file
+    - Figure out how to store values passwords not in plaintext
+    - Figure out a better way for encrypting the rocksdb database, so that it is difficult to extract data from it
+    - Figure out managing the json strings
+    - Potentially switch to a different server framework
+    - Track resource utilization and figure out how threading works for this thing
+    - Uses tasks.json to make it easier to build your file. Also have a more consistent way of managing json, python, and c++ when it comes to building. Need some kind of package manager or place where library files are kept. Don't want to be copying APIs all over the place.
+    - You will want your server to suppport https or some sort of client to server encryption that way you are safe from MITM attacks
+    - In ther server parameters and structs and classes should have members stored in decreasing order
+    - Use clang to lint your server side code
+    - Think about the auth tokens more carefully and when they need to be invalidated
+## Amazon Plugin
+    - 

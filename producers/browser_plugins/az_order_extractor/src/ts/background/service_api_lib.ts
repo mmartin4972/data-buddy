@@ -1,51 +1,43 @@
-async function post_json(url: string, data: any): Promise<Response> {
+async function handle_response(res: any): Promise<Response> {
     let response: Response = new Response(500, {});
-    await fetch(url, {
+    await res.text()
+    .then(function (parsed: any) {
+        let json: any;
+        try {
+            json = JSON.parse(parsed);
+        } catch (error) {
+            throw new Error("Trouble parsing following as JSON. " + parsed);
+        }
+        response = new Response(res.status, json);
+    })
+    .catch(function (err: any) {
+        response = new Response(res.status, {"error": "Trouble parsing as text. " + err});
+    });
+    return response;
+}
+
+async function post_json(url: string, data: any): Promise<Response> {
+    return await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
     })
-    .then(async function (res: any) {
-        await res.text()
-        .then(function (parsed: any) {
-            let json: any;
-            try {
-                json = JSON.parse(parsed);
-            } catch (error) {
-                throw new Error("Trouble parsing following as JSON. " + parsed);
-            }
-            response = new Response(res.status, json);
-        })
-        .catch(function (err: any) {
-            response = new Response(res.status, {"error": "Trouble parsing as text. " + err});
-        });
-    })
+    .then(handle_response)
     .catch(function (err: any) {
-        response = new Response(500, {"error": "Trouble fetching. " + err});
+        return new Response(500, {"error": "Trouble fetching. " + err});
     });
-    return response;
 }
 
 async function get_json(url: string): Promise<Response> {
-    let response: Response = new Response(500, {});
-    await fetch(url, {
+    return await fetch(url, {
         method: 'GET'
     })
-    .then(async function (res: any) {
-        await res.json()
-        .then(function (json: any) {
-            response = new Response(res.status, json);
-        })
-        .catch(function (err: any) {
-            response = new Response(res.status, err);
-        });
-    })
+    .then(handle_response)
     .catch(function (err: any) {
-        response = new Response(500, err);
+        return new Response(500, err);
     });
-    return response;
 }
 
 export class Client {
@@ -64,8 +56,6 @@ export class Client {
         }
         this.url = '';
     }
-
-
 }
 
 export class Response {
@@ -115,5 +105,63 @@ export class Buddy {
 
     async disconnect(): Promise<Response> {
         return await get_json(this.url + '/db-disconnect-buddy');
+    }
+
+    async create_client(client: Client): Promise<Response> {
+        let data: any = {
+            'name': client.name,
+            'password': client.password
+        }
+        let res = await post_json(this.url + '/db-create-client', data);
+        if (res.status_code === 200) {
+            client.url = this.url;
+            client.auth_token = res.data['auth_token'];
+        }
+        return res;
+    }
+
+    async connect_client(client: Client): Promise<Response> {
+        let data: any = {
+            'name': client.name,
+            'password': client.password
+        }
+        let res = await post_json(this.url + '/db-connect-client', data);
+        if (res.status_code === 200) {
+            client.url = this.url;
+            client.auth_token = res.data['auth_token'];
+        }
+        return res;
+    }
+
+    async disconnect_client(client: Client): Promise<Response> {
+        let data: any = {
+            'name': client.name,
+            'auth_token': client.auth_token
+        }
+        return await post_json(this.url + '/db-disconnect-client', data);
+    }
+
+    async list_clients(): Promise<Response> {
+        return await get_json(this.url + '/db-list-clients');
+    }
+
+    async list_categories(): Promise<Response> {
+        return await get_json(this.url + '/db-list-categories');
+    }
+
+    get_path(): string {
+        return this.path;
+    }
+
+    get_url(): string {
+        return this.url;
+    }
+
+    async ping() : Promise<Response> {
+        return await get_json(this.url + '/db-ping');
+    }
+
+    async is_connected(): Promise<Response> {
+        return await get_json(this.url + '/db-check-buddy-connected');
     }
 }
