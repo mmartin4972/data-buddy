@@ -5,6 +5,18 @@ from typing import TypeVar
 def raise_error(e, res):
     raise Exception(str(e) + res.json()['error'])
 
+def check_success(res) :
+    assert(res.status_code == 200)
+    if res.json()['error'] != "":
+        print(res.json()['error'])
+    assert(res.json()['error'] == "")
+    return res
+
+def check_fail(res) :
+    if res.json()['error'] != "":
+        print(res.json()['error'])
+    assert(res.status_code != 200)
+  
 # Class that is used for anything that requires authorization
 # Client can only be connected to one database at a time
 T = TypeVar('T', bound='Client')

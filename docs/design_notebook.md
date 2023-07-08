@@ -817,7 +817,23 @@ Consumer Brainstorming ideas:
         - Local Tax
         - Sales Tax
         - Property Tax
-- manager is going to be the name of the local electrum application that has access to the entire database and is able to show the user a multitude of information. You are going to have to establish some special rules on how to create it, so that another application cannot impersonate manager, since it should have access to every application 
+- manager is going to be the name of the local electrum application that has access to the entire database and is able to show the user a multitude of information. You are going to have to establish some special rules on how to create it, so that another application cannot impersonate manager, since it should have access to every application
+- Will want to have default values for where stuff is installed and where the command line utilities and such are able to locate various files for parsing purposes
+- Tauri v. Electrum
+    - I was comparing and contrasting Tauri v. Electrum for the manager. 
+    - I want the manager to be able to run websites and plugins from other developers, and electrum has support for this functionality through a system called BrowserView.
+    - Tauri does not have support for this feature, so I am going to stick with electrum
+- I am going to follow the Rust naming convention going forward because I like it
+    - Rust Naming Conventions: https://rust-lang.github.io/api-guidelines/naming.html#:~:text=Basic%20Rust%20naming%20conventions%20are,%22value%2Dlevel%22%20constructs 
+	    - Types, Traits, and Enums (All Custom Object types) should be UpperCamelCase
+	    - Everything else is snake cased (including file names)
+        - Statics and contants are SCREAMING_SNAKE_CASE where everything is capitalized
+- Configure the service such that the manager is the only one that connect and disconnect the service to different databases. All other applications will just be able to ping the database to see if it is alive and will be able to check if it is connected, and if it is connected they can start writing to it.
+- For all of my python files I am going to opt to use single quotes when writing python files for consistency sake
+- it seems that mint is being annoying and is not giving me a full list of their transaction types. For this reason I am going to use spacy to check which of the mint categories is most closely associated with the provided text. I may also be able to use spacy for categorizing things which we aren't sure about
+- Installing and setting up Spacy
+    - `pip install spacy`
+    - `python3 -m spacy download <name of model. e.g. en_core_web_sm>`
 
 # Ongoing List of Things TODO
 ## Server
@@ -835,5 +851,7 @@ Consumer Brainstorming ideas:
     - In ther server parameters and structs and classes should have members stored in decreasing order
     - Use clang to lint your server side code
     - Think about the auth tokens more carefully and when they need to be invalidated
+    - Move json schemas into the predefined_objects.json file
+    - Add special support for allowing the manager to be able to be created. Not sure if you want this in the server logic or to just happen automatically at install?
+    - Refactor to comply with the rust naming convention
 ## Amazon Plugin
-    - 
