@@ -51,7 +51,13 @@ async function recv_popup_message(message: common.Message): Promise<void> {
             background_log("Got connect message")
             handle_db_call(await buddy.connect(message.data["path"]), 
                 async (): Promise<void> => {
-                    let res = await buddy.is_client_connected(client);
+                    let res = await client.is_authenticated();
+                    if (res.status_code === 200 && res.data["data"] === true) { // We are authenticated
+                    
+                    } else { // We are not authenticated or cannot conenct
+
+                    }
+
                     let res = await buddy.connect_client(client);
                     if (res.status_code === 200) {
                         background_log("Connected no createp all Good")

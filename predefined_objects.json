@@ -1,0 +1,116 @@
+{
+    "app_schemas" : {
+        "category_key_schema" : {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+                "category": { "type": "string", "enum": ["category"] },
+                "name": { "type": "string" }
+            },
+            "required": ["category", "name"]
+        },
+        "category_value_schema" : {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "key_schema": { "type": "object" },
+                "value_schema": { "type": "object" },
+                "clients": { "type": "array",
+                    "items": { "type": "string" },
+                    "description": "List of clients that can access data stored using this schema. We recommend db_dashboard be listed as a client, since this is the main UI application that will be used for managing data buddy"
+                }
+            },
+            "required": ["name", "key_schema", "value_schema", "clients"]
+        }
+    }, 
+
+    "user_schemas" : {
+        "finance" : {
+            "key_schema" : {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type" : "object",
+                "properties" : {
+                    "category" : "finance",
+                    "time" : { 
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required" : ["category", "time"]
+            },
+            "value_schema" : {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type" : "object",
+                "properties" : {
+                    "name" : { "type": "string" },
+                    "time" : { 
+                        "type": "string",
+                        "format": "date-time",
+                        "description" : "Time of the transaction. Should be same as key's time value"
+                    },
+                    "amount" : { "type": "number", 
+                        "minimum" : 0
+                    },
+                    "direction" : { "type": "string",
+                        "description" : "Direction of the transaction from the perspective of the account",
+                        "enum" : ["credit", "debit"]
+                    },
+                    "account" : { "type": "string" },
+                    "source" : { "type": "string" },
+                    "description" : { "type": "string" },
+                    "transaction_type" : { "type": "string",
+                        "description" : "Category of the transaction based on Intuit Mint category system",
+                        "enum" : [
+                            "income",
+                            "miscellaneous",
+                            "entertainment",
+                            "education",
+                            "shopping",
+                            "personal_care",
+                            "health_and_fitness",
+                            "kids",
+                            "food_and_dining",
+                            "gifts_and_donations",
+                            "investments",
+                            "bills_and_utilities",
+                            "auto_and_transport",
+                            "fees_and_charges",
+                            "business_services",
+                            "taxes"
+                        ]
+                    },
+                    "transaction_subtype" : {
+                        "type" : "string",
+                        "description" : "Subcategory of the transaction based on Intuit Mint category system"
+                    }
+                },
+                "required" : ["name", "time", "amount", "direction", "account", "source", "description", "transaction_type"],
+                "oneOf" : [
+                    {
+                        "if" : { "properties" : { "transaction_type" : { "const" : "income" }}},
+                        "then" : { "properties" : { "transaction_subtype" : { "enum" : ["paycheck", "investment", "returned_purchase", "bonus", "interest_income", "remimbursement", "rental_income"]}}}
+                    },
+                    {
+                        "if" : { "properties" : { "transaction_type" : { "const" : "miscellaneous" }}},
+                        "then" : { "properties" : {"transaction_subtype" : { "enum" : ["cash_and_atm", "check"]}}}
+                    },
+                    {
+                        "if" : { "properties" : { "transaction_type" : { "const" : "entertainment" }}},
+                        "then" : { "properties" : { "transaction_subtype" : { "enum" : ["arts", "music", "movies_and_dvds", "newspapers_and_magazines"]}}}
+                    }
+                ]
+            },
+            "category_key" : {
+                "category" : "category",
+                "name" : "finance"
+            },
+            "category_value" : {
+                "name" : "finance",
+                "key_schema" : {"$ref": "#/user_schemas/finance/key_schema"},
+                "value_schema" : {"$ref": "#/user_schemas/finance/value_schema"},
+                "clients" : ["db_dashboard"]
+            }
+        }
+    }
+}

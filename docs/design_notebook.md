@@ -553,8 +553,271 @@ TODO:
 - You are going to need to establish some sort of ping function on the server, so that the client can tell that it is still connected? For now, don't worry about that and just say it is connected until you get some sort of error message and then move to disconnected. Configure this in the background.ts file.
 - Do you know what happens if you send a create message to a directory that already has something? Does it delete everything or make something new?
 
-## 6/28/23
-- 
+## 6/30/23
+- I came to the realization that if I am going to break apart my extension into the various components that I laid out in my C4 diagram that I can have my background component be written in rust, since it is not directly interfacing with the DOM. My inject.js and popup.js are interfacing with the DOM, so I will want those to remain in javascript, but this is a good opportunity for me to use Rust for the background service, which it is probably better that it is in rust, since I'll need it for caching information and performing fast queries to my C++ service.
+- Wasm bindgen is used to facilitate javascript to wasm interactions, so I think that the entrypoint for the background.js is going to be javascript, but the actual application will be running wasm
+- While I'm modifying my extension setup I may as well just convert from using raw html to using react or vue.js
+- I am going to go with react, since it is a library and not a framework and because I don't have much experience with it, so it will be a good learning tool
+- Rust Notes:
+    - mod declares a module
+    - pub makes functions within a module accessible from outside that module
+    - fn declares a function
+- Comlink is a libary that allows for javascript code to communicate with rust code
+- Webpack is configured in such a way in this repo to compile everything to dist and then copy everything that is in public into dist, and then execute dist
+- There seems to be some sort of way of linking the wasm worker with the react app when declaring the app itself
+- I take the delcaration of the app to be a very well defined thing, and consequnetly I blieve that there is some sort of special protocol for connecting the webworker to the application via App component in the popup.tsx
+- Webpack seems to just know how to compile jsx, react, and typescript files, so as long as you specify a file as jsx or tsx webpack is going to know how to compile it and will return the appropriate javascript
+- Wasm-pack is another tol that builds web assembly from rust
+- Compile rust is put into the pkg folder in the webnav_analysis folder
+- It is then read as a dependency from the package.json file, which is then compiled into the dist folder
+- Finally the application is loaded as an extension from the dist folder
+- React
+    - React components are javascript functions that return markdown (html)
+    - You can have markdown that has capital letters and we know that these refer to react components and not actual markdown
+    - JSX is a special type of markdown. It is to html with typescript is to javascript
+    - use `className` instead of `class`
+    - curly braces let you exacpe back into javascript
+    - can pass javascript functions to certain html attributes such as onClick
+    - react's useState can be used to generate state which persists throughout the life of the application
+    - App is the main entrypoint. You should have an app component inherited from react in your index.js and from that it will call into your custom javascript function
+- WasmWorker
+    - Just an interface for the comlink api
+- comlink and web workers
+    - RPC implementation for postMessage, which is what we were using in javascript to communicate from the application running in the DOM to the application running in the background. The same system of communication must be used here.
+- Why is background.ts just empty? Does it need to be there for compilation purposes or is it just unnecessary?
+- How is the wasm module loaded in the actual application
+- Wasmworker is where the webnav_analysis module is imported and this module is develoepd with rust
+- functions from this rust module are then used in and returned in the javascript code
+
+## 7/1/2023
+- It is July. I got bogged down in making the Amazon history extractor extension. One lesson that I have learned is that if you get bogged down solving one problem, go solve a different problem, get some momentum, then come back to solving the original problem.
+- One of the primary reasons that I started developing this application was so that I could get exposure to the new big data and machine learning wave, as well as utilize it as a way to enhance my probability knowledge. This July I am going to focus on building a consumer which will be focused around one of these areas. I would like to use random processes, markov chains, or machine learning techniques for this consumer. Whatever data I need I will manually collect and will just pump it into my database and then build the consumer to read the information out from the database.
+- Ideas:
+    - Duration analysis
+        - Time spent commuting
+        - Time spent on any webpage
+        - Time spent on computer
+        - Time spent in a particular location
+    - AI Chatbot
+        - analyzer that tells you how often you wear particular articles of clothing and what your most and least worn clothes are and recommends what clothes you should donate
+        - ebay assistant that looks at buying and selling trends on ebay and gives you advice on how to price various items
+    - Failure analysis
+        - probability of car or boat breaking down
+    - Finance analysis
+        - expected amount of money spent while in a particular area (multiple random variable)
+        - expected amount of money spent to get an Uber
+        - expected amount of money spent on rent in an area
+        - Expected amount of money donated each year
+        - expected amount of money spent on credit card
+    - Amazon analysis
+        - Expected value paid on amazon order
+    - Email analysis
+        - A company called SayMine is able to analyze which companies use your data just by looking at your email
+    - Calendar and contacts analysis
+        - who do I hang out with the most
+        - who haven't I reached out to in a while
+Based on this medium article: [Title](https://towardsdatascience.com/what-is-the-value-of-your-data-9341cd019b4d) it doesn't seem like our data is worth very much. However, the most expensive data points it seems are as follows:
+1. Health Data (age, gender, personality traits, physical and mental health)
+2. Demographic Data (age, gender, political affiliation, religion, sexual orientation)
+3. Identity Data (name, age, gender, profession, income, address, picture)
+    - Income analysis
+        - suggestions for how you can increase maybe from tax perspective
+    - Taxation analysis
+- Chat bots advantages:
+    - an intuitive way of querying for information
+- Could just make a chatbot that learns the structure of the database and based on this structure allows you to ask it various questions about your personal data
+- Github copilot right now takes your current file as well as current open files, puts them into the ChatGPT query and then executes the query using these inputs. It doesn't always know everything about your code base all at once
+- Retriever is the technical term for the application which is in charge of supplying all relevant information for a particular data query
+- Retrievers are trained alongside ML models so that they can learn what the most relevant data is that they should be retrieving
+- Convert all database info into a vector database and we then vectorize our quesiton and we compare the vectorized question with the data in the database, so that we can get the most relevant pieces of information
+- Reader model then takes the retrieved context vectors and reads the information within each of these context vectors and extracts very specific information from a larger chunk of data
+- Long tail in Q&A questions, so depends on use case, since if there is some very niche data and there isn't alot of online data on it it will be more difficult to train and you will have to train yourself, but if it is general can just used a pretrained model
+
+## 7/3/2023
+- My current plan is that I want to develop a retreiver and try to plugin the retrieved information into the LLM and get interesting results. I would need to configure the LLM to be receptive to the data format that I retrieve, or I could reconstruct the information retrieved in a way that is more conducive and helpful to the LLM. The data that I am going to start with is Google timeline data. I will see what I am capable of deducing from this data. I am going to first put this data into data buddy and will then read out the data from data buddy so that I can ask the LLM questions regarding it.
+- The basic idea is that you want to engineer a data rich and complex query that takes in a lot of relevant input and then have ChatGPT give you the response. If you want ChatGPT to take what you are giving it as input you need to convert your input from a basic data key, value to an actual query. The main engineering is figuring out what data to provide it and the best format to provide it this data. ChatGPT has limited input, so we want to be smart about the size of the text prompts we make.
+- ChatGPT can be thought of as a machine learning model which has learned to understand and interpret human language. The interface of human language is incredibly imprecise which gives the model incredible flexibility, but also limited in accuracy and tunability.
+- It seems that Facebook is actually using this technique in their SOTA chatbot that has the great added value of being able to remember things for a long time: [Example](https://ai.facebook.com/blog/blender-bot-2-an-open-source-chatbot-that-builds-long-term-memory-and-searches-the-internet/). At the end of the day however, all they are doing is adding an extra step to ChatGPT where you have a system for searching for information that is relevant to the question being asked at hand, condensely provides this information to the text processing model and then returns this result.
+- I want to avoid training an AI if possible, since it is expensive and time consuming and more of an art than a science. The data that I am collecting can be retrieved, given a good deal of structure, and then named entity recognition or some other model could be used to get the most relevant information and then return this to the user. You don't necessarily have to use some special text embedding system for retrieving this information, you could quite naively just do some categorical date search. You can even incorporate prompts into the Chatbot that allow it to ask the user for multpile rounds of information which will help it to better search through its data store and report the relevant info to the user.
+- You can connect Wolfram Alpha and ChatGPT and can then get the most relevant response based on the question.
+- This architecture would also allow you to be able to develop a highly effective system, which doesn't require tons of random user's very personal data to train. You can do all of this using models that were trained to solve other tasks and just start gluing them together.
+- This whole system is what the ChatGPT plugin system is baded on.
+- This Chatbot is one example of a consumer of the data that I am collecting. Is there a better example that I could be using?
+Assuming I have the below data what consumer applications would be cool to make?:
+- Email
+- Music
+- Contacts
+- Calendar
+- Social Media
+- Shopping
+- Finance
+- Passwords
+- Health
+- Technology usage
+- Search
+- Github
+- Slack
+- Hotel sites
+- Clothing sites
+- Airline sites
+- Movies
+- Documents
+- social media posts
+
+Consumer Brainstorming ideas:
+    - Give it the bible, encode text segments of the bible and have it interpret rules of the bible and how you can apply them to your life?
+    - Can then combine biblical rules, as well as catechism rules, as well as your own personal information and have it give you helpful insights and ways that you can improve as an individual
+    - Create a chatbot that people can interact with to query random information about theirselves and their personal lives. They can then leverage a combination of wolfram alpha and chatgpt to get mathematical as well as creative answers.
+    - App that more intelligently recommends Christian alternatives to particular music?
+    1. Metric Tracking Applications
+        - Automatic habit tracking
+        - Health tracking
+        - Spending and wealth tracking and net worth and finance
+        - Clothing usage tracking
+        Donation tracking
+        - Media exposure analyzer and how much media you consume of different types and if it is of redeeming value or just garbage
+    2. Recommendation Applications
+        - Optimize the amount of stuff you own
+        - Optimize how to be more secure
+        - Optimize for money
+        - Optimize for time (how to use your time better)
+        - How to becomre more catholic
+        - Optimize for health and eating healthy food
+        - Optimize your life for multiple categories
+        - Optimize the amount of stuff you own
+        - Teaching application that teaches based on how you learn and teaches things that it believes will be useful to you based on your profession.
+        - Career coach
+        - Technology literacy teahing coach
+        - 1% improvement app
+        - Movie recommendation app
+    3. Automation applications
+        - Analyze who has your data and automatically request these companies to delete this data of yours
+        - Attempt to detect patterns in your behavior and starts to execute these patterns automaticlaly without your involvemnet. Maybe like buying a recurring plane ticket or paying a credit card bill or something
+    4. Enhanced Personal Applications
+        - Email
+        - Contacts
+        - Calendar
+    - Survey participation application. Application that asks data buddy to provide various pieces of info about a user that weren't normally collected until now and the user can elect to participate in the survey or not. Could be like research study groups and they can offer to pay you for your information instead of having to survey you in person.
+- Note: It is difficult to develop good applications using personal data, when you don't have access to large databases of the data.
+## 7/5/23
+- These are all good ideas and potential directions. For starters I am going to keep on going with location information pumped into ChatGPT. It shouldn't take me long.
+- Information retrieval plan
+    - Have embeddings built that are year, month, day, time, (year month day), (year month)
+    - In order to do this the internet recommends I develop my own Named Entity Recognition tool using Spacy: [internet](https://datascience.stackexchange.com/questions/87981/extract-date-duration-from-text)
+    - I've already done this for a school project and am not going to learn anything by doing it twice, so I'm not going to do this consumer project.
+- Life suggestion application would require me to leverage ChatGPT as well as my own recommendations. I would need to analyze different data that is provided to data buddy and then make suggestions. We could start very specific by analyzing location data and tracking the amount of times that you go to Church and recommending that people go to Church more. Let's start with this.
+
+## 7/8/23
+- Finance Category Key Structure
+    - Date
+- Finance Category Value Structure
+    - Name
+    - Date
+    - Amount
+    - Debit/Credit
+    - Account
+    - Description
+    - Category (From Mint Categories)
+    - Sub category (From Mint Categories)
+    - Source
+- [Mint Categories](https://mint.intuit.com/mint-categories/)
+    - Income
+        - Paycheck
+        - Investment
+        - Returned Purchase
+        - Bonus
+        - Interest Income
+        - Reimbursement
+        - Rental Income
+    - Miscellaneous
+        - Cash & ATM
+        - Check
+    - Entertainment
+        - Arts
+        - Music
+        - Movies & DVDs
+        - Newspaper & Magazines
+    - Education
+        - Tuition
+        - Student Loan
+        - Books & Supplies
+    - Shopping
+        - Clothing
+        - Books
+        - Electronics & Software
+        - Hobbies
+        - Sporting Goods
+    - Personal Care
+        - Laundry
+        - Hair
+        - Spa & Massage
+    - Health & Fitness
+        - Dentist
+        - Doctor
+        - Eye Care
+        - Pharmacy
+        - Health Insurance
+        - Gym
+        - Sports
+    - Kids
+        - Activities
+        - Allowance
+        - Baby Supplies
+        - Babysitter & Daycare
+        - Child Support
+        - Toys
+    - Food & Dining
+        - Groceries
+        - Coffee Shops
+        - Fast Food
+        - Restaurants
+        - Alcohol
+    - Gifts & Donations
+        - Gift
+        - Charity
+    - Investments   
+        - Deposit   
+        - Withdrawal    
+        - Dividends & Cap Gains 
+        - Buy   
+        - Sell  
+    - Bills & Utilities 
+        - Television    
+        - Home Phone    
+        - Internet  
+        - Mobile Phone  
+        - Utilities
+    - Auto & Transport
+        - Gas & Fuel
+        - Parking
+        - Service & Auto Parts
+        - Auto Payment
+        - Auto Insurance
+    - Travel
+        - Air Travel
+        - Hotel
+        - Rental Car & Taxi
+        - Vacation
+    - Fees & Charges
+        - Service Fee
+        - Late Fee
+        - Finance Charge
+        - ATM Fee
+        - Bank Fee
+        - Commissions
+    - Business Services
+        - Advertising
+        - Office Supplies
+        - Printing
+        - Shipping
+        - Legal
+    - Taxes
+        - Federal Tax
+        - State Tax
+        - Local Tax
+        - Sales Tax
+        - Property Tax
+- db_dashboard is going to be the name of the local electrum application that has access to the entire database and is able to show the user a multitude of information. You are going to have to establish some special rules on how to create it, so that another application cannot impersonate db_dashboard, since it should have access to every application 
 
 # Ongoing List of Things TODO
 ## Server
