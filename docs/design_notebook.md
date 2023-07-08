@@ -817,7 +817,7 @@ Consumer Brainstorming ideas:
         - Local Tax
         - Sales Tax
         - Property Tax
-- db_dashboard is going to be the name of the local electrum application that has access to the entire database and is able to show the user a multitude of information. You are going to have to establish some special rules on how to create it, so that another application cannot impersonate db_dashboard, since it should have access to every application 
+- manager is going to be the name of the local electrum application that has access to the entire database and is able to show the user a multitude of information. You are going to have to establish some special rules on how to create it, so that another application cannot impersonate manager, since it should have access to every application 
 
 # Ongoing List of Things TODO
 ## Server

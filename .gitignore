@@ -9,3 +9,4 @@ service/third_party
 service/tests/__pycache__
 **/node_modules
 **/dist
+/tests

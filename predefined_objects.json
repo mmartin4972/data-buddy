@@ -109,7 +109,7 @@
                 "name" : "finance",
                 "key_schema" : {"$ref": "#/user_schemas/finance/key_schema"},
                 "value_schema" : {"$ref": "#/user_schemas/finance/value_schema"},
-                "clients" : ["db_dashboard"]
+                "clients" : ["manager"]
             }
         }
     }
