@@ -19,7 +19,6 @@ def check_fail(res) :
   
 # Class that is used for anything that requires authorization
 # Client can only be connected to one database at a time
-T = TypeVar('T', bound='Client')
 class Client:
     def __init__(self, name="", password="", auth_token="", url=""):
         self.name = name
@@ -65,12 +64,12 @@ class Client:
         }
         return requests.post(self.url + '/db-create-category', json=data)
     
-    def add_client_to_category(self, category: str, add_client: T) :
+    def add_client_to_category(self, category: str, add_client_name: str) :
         data = {
             'name': self.name,
             'auth_token': self.auth_token,
             'category_name': category,
-            'add_name': add_client.name
+            'add_name': add_client_name
         }
         return requests.post(self.url + '/db-add-client', json=data)
     

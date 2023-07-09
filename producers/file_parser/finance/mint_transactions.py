@@ -3,9 +3,9 @@ import datetime
 import sys
 import json
 import pandas as pd
-from finance_common import *
+from .finance_common import *
 
-class MintTransactionParser : 
+class MintTransactionParser(IFileParser) : 
     def __init__(self, name, use_ml) :
         self.name = name
         self.category = 'finance'
@@ -15,16 +15,10 @@ class MintTransactionParser :
             self.nlp = spacy.load('en_core_web_sm')
         else :
             self.nlp = None
-    
-    def format_mint_category(self, mint_category) :
-        mint_category = mint_category.lower()
-        mint_category = mint_category.replace(' ', '_')
-        mint_category = mint_category.replace('&', 'and')
-        return mint_category
 
     def convert_mint_category_to_finance_type(self, mint_category) :
         final_category = ""
-        mint_category = self.format_mint_category(mint_category)
+        mint_category = format_mint_category(mint_category)
         
         if mint_category in get_finance_types() :
             final_category = mint_category
@@ -37,7 +31,7 @@ class MintTransactionParser :
             
     def convert_mint_category_to_finance_subtype(self, mint_category) :
         final_category = ""
-        mint_category = self.format_mint_category(mint_category)
+        mint_category = format_mint_category(mint_category)
 
         if mint_category in get_finance_subtypes() :
             final_category = ""

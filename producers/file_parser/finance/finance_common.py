@@ -1,29 +1,24 @@
-import json
 import pandas as pd
+import sys
+import os
+script_path = os.path.abspath(__file__)
+parent_directory = os.path.dirname(script_path)
+sys.path.append(os.path.join(parent_directory, '../'))
+from common import IFileParser, PredefinedObjectsJSON
 
-class Singleton:
-    _instance = None
+def format_mint_category(mint_category) :
+    mint_category = mint_category.lower()
+    mint_category = mint_category.replace(' ', '_')
+    mint_category = mint_category.replace('&', 'and')
+    return mint_category
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-class PredefinedObjectsJSON(Singleton) :
-    def __init__(self) :
-        with open('../../../predefined_objects.json', 'r') as f :
-            self.predefined_json = json.load(f)
-
-    def __getitem__(self, index):
-        return self.predefined_json[index]
-    
 def get_finance_types() :
     return PredefinedObjectsJSON()['user_schemas']['finance']['value_schema']['properties']['transaction_type']['enum']
 
 def get_finance_subtypes() :
     types = []
     for obj in PredefinedObjectsJSON()['user_schemas']['finance']['value_schema']['oneOf'] :
-        types.append(obj['then']['properties']['transaction_subtype']['enum'])
+        types += (obj['then']['properties']['transaction_subtype']['enum'])
     return types
 
 def get_finance_subtypes_to_type() :

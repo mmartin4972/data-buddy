@@ -1,16 +1,18 @@
 import sys
 import os
-sys.path.append('../../service/api-libs')
+script_path = os.path.abspath(__file__)
+parent_directory = os.path.dirname(script_path)
+sys.path.append(os.path.join(parent_directory, '../../service/api-libs'))
 from service_api_lib import Buddy, Client, check_success
 import argparse
-from finance.mint_transactions import mint_transaction_parser
+from finance.mint_transactions import MintTransactionParser
 import pandas as pd
 
 # REQUIRES
 # parser class provides is_type method which returns true or false depending on if file is of type
 # parser class provides parse method which returns list of json objects parsed according to category
 parser_classes = [
-    mint_transaction_parser
+    MintTransactionParser
 ]
 
 # Use argparse to parse arguments
@@ -28,6 +30,8 @@ parser.add_argument('-u', '--url', dest='db_url', type=str, nargs='?',
                     help='url of data buddy service', default = 'http://localhost:8787')
 parser.add_argument('-ml', '--machine-learning', dest='use_ml', action='store_true',)
 args = parser.parse_args()
+args.path = args.path[0]
+args.category = args.category[0]
 
 # Check if path is a file or directory and check if exists
 if os.path.isfile(args.path) :
@@ -41,12 +45,12 @@ else :
 # Check if can connect to database
 b = None
 c = None
-password = "file_parser_super_secret_password"
+password = 'file_parser_super_secret_password'
 try :
     b = Buddy(args.db_url, args.db_path)
     check_success(b.ping())
     check_success(b.is_connected())
-    c = Client("file_parser", password)
+    c = Client('file_parser', password)
     check_success(b.connect_client(c))
 except Exception as e :
     print('Unable to connect to database')

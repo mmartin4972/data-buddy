@@ -834,6 +834,19 @@ Consumer Brainstorming ideas:
 - Installing and setting up Spacy
     - `pip install spacy`
     - `python3 -m spacy download <name of model. e.g. en_core_web_sm>`
+- Possible good starting application for consumer side of stuff will be a category filter that is able to go through all finance data easily and allows user to merge together similar stuff and then overwrites those values back into the database
+- Primary objective and first use case is going to be the consolidation of financial data and the ability to analyze it and get a nice holistic view of it
+- Could create a data mixer where people can voluntarily put their data for free, so that new and more interesting machine learning can be done and the whole thing can be anonymous and relatively security friendly
+- Data mixer would be free and some people may write false data, but that's fine. Will hopefully only be a small portion of people
+
+## 7/9/23
+- TODO:
+    - [ ] Make finance_common the central point for checking all of the finance parsing
+    - [ ] Manipulate the intuit mint data file that you have, so that the information is not real
+    - [ ] Create a regression testing script for the file parser 
+    - [ ] convert the finance directory into its own package that you can import into the main file and can then just very quickly check the type for all finance
+    - [ ] create a parsing file for the amazon order history stuff
+    - [ ] start working on the data buddy manager CL application and rethink the security system you have in place
 
 # Ongoing List of Things TODO
 ## Server
@@ -854,4 +867,10 @@ Consumer Brainstorming ideas:
     - Move json schemas into the predefined_objects.json file
     - Add special support for allowing the manager to be able to be created. Not sure if you want this in the server logic or to just happen automatically at install?
     - Refactor to comply with the rust naming convention
-## Amazon Plugin
+## Web Scraper
+## File Parser
+    - Add ability of parser to load custom parsing code and parse file at runtime
+    - use the importlib.resources to load in the json file, so that way when you create a binary you don't need that as a side import
+    
+## Manager
+    - Make a command line interface for testing purposes and for users that don't want to use an application
