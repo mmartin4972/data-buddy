@@ -841,12 +841,14 @@ Consumer Brainstorming ideas:
 
 ## 7/9/23
 - TODO:
-    - [ ] Make finance_common the central point for checking all of the finance parsing
-    - [ ] Manipulate the intuit mint data file that you have, so that the information is not real
+    - [x] Manipulate the intuit mint data file that you have, so that the information is not real
     - [ ] Create a regression testing script for the file parser 
     - [ ] convert the finance directory into its own package that you can import into the main file and can then just very quickly check the type for all finance
     - [ ] create a parsing file for the amazon order history stuff
     - [ ] start working on the data buddy manager CL application and rethink the security system you have in place
+
+## 7/10/23
+- Something cool to do may be to make an application which tracks the total amount of money that you give to the government including taxes form all individual purchases
 
 # Ongoing List of Things TODO
 ## Server
@@ -867,6 +869,7 @@ Consumer Brainstorming ideas:
     - Move json schemas into the predefined_objects.json file
     - Add special support for allowing the manager to be able to be created. Not sure if you want this in the server logic or to just happen automatically at install?
     - Refactor to comply with the rust naming convention
+    - Add clang to provide linting and clangd for helpful resolution insights. Make sure you are using C++20 for compilation
 ## Web Scraper
 ## File Parser
     - Add ability of parser to load custom parsing code and parse file at runtime

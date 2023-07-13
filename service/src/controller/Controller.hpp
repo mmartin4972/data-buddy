@@ -217,7 +217,6 @@ public:
     
     /**
      * @param categories: list of categories containing their name, key_params, and value_params
-     * @param category_schema: json schema needed to construct the categories object
      * RETURNS: empty string if successful, error message if not
     */
     string do_list_categories(string& categories);
@@ -244,7 +243,7 @@ public:
     ENDPOINT_INFO(root) {
         info->summary = "Test Endpoint 1";
         info->addResponse<Object<MyDto>>(Status::CODE_200, "application/json");
-    }  
+    }
     ENDPOINT("GET", "/db-hello", root) {
         auto dto = MyDto::createShared();
         dto->message = "Hello World!";
@@ -277,7 +276,7 @@ public:
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-get hit\n";
+            printf("/db-get hit\n");
         }
 
         // Function Call
@@ -303,7 +302,7 @@ public:
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-get-range hit\n";
+            printf("/db-get-range hit\n");
         }
 
         // Function Call
@@ -330,7 +329,7 @@ public:
         OATPP_ASSERT_HTTP(recv->auth_token, Status::CODE_400, "'auth_token' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-put hit\n";
+            printf("/db-put hit\n");
         }
 
         // Function Call
@@ -353,7 +352,7 @@ public:
         OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is required!");
         
         if (DEBUG) {
-            std::cout << "/db-create-buddy hit\n";
+            printf("/db-create-buddy hit\n");
         }
 
         // Function Call
@@ -378,7 +377,7 @@ public:
         OATPP_ASSERT_HTTP(recv->path, Status::CODE_400, "'path' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-connect-buddy hit\n";
+            printf("/db-connect-buddy hit\n");
         }
 
         // Function Call
@@ -397,7 +396,7 @@ public:
     ENDPOINT("GET", "/db-disconnect-buddy", disconnect_buddy) {
         
         if (DEBUG) {
-            std::cout << "/db-disconnect-buddy hit\n";
+            printf("/db-disconnect-buddy hit\n");
         }
 
         // Function Call
@@ -421,7 +420,7 @@ public:
         OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-create-client hit\n";
+            printf("/db-create-client hit\n");
         }
 
         // Function Call
@@ -447,7 +446,7 @@ public:
         OATPP_ASSERT_HTTP(recv->name, Status::CODE_400, "'name' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-disconnect-client hit\n";
+            printf("/db-disconnect-client hit\n");
         }
 
         // Function Call
@@ -471,7 +470,7 @@ public:
         OATPP_ASSERT_HTTP(recv->password, Status::CODE_400, "'password' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-connect-client hit\n";
+            printf("/db-connect-client hit\n");
         }
 
         // Function Call
@@ -499,7 +498,7 @@ public:
         OATPP_ASSERT_HTTP(recv->add_name, Status::CODE_400, "'add_name' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-add-client hit\n";
+            printf("/db-add-client hit\n");
         }
 
         // Function Call
@@ -524,7 +523,7 @@ public:
         OATPP_ASSERT_HTTP(recv->value_schema, Status::CODE_400, "'value_params' is require!");
         
         if (DEBUG) {
-            std::cout << "/db-create-category hit\n";
+            printf("/db-create-category hit\n");
         }
 
         // Function Call
@@ -543,7 +542,7 @@ public:
     ENDPOINT("GET", "/db-list-clients", list_clients) {
 
         if (DEBUG) {
-            std::cout << "/db-list-clients hit\n";
+            printf("/db-list-clients hit\n");
         }
 
         // Function Call
@@ -564,7 +563,7 @@ public:
     ENDPOINT("GET", "/db-list-categories", list_categories) {
         
         if (DEBUG) {
-            std::cout << "/db-list-categories hit\n";
+            printf("/db-list-categories hit\n");
         }
 
         // Function Call

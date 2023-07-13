@@ -462,9 +462,9 @@ string Controller::do_connect_client(const string& name, const string& password,
             throw std::runtime_error("Buddy is not connected. Please connect or create a buddy first");
         }
         json auth_key = build_auth_token_key(name);
-        if (does_key_exist(app_db, AUTH_TOKEN_KEY_SCHEMA, auth_key)) { // Check client doesn't already have an authentication token
-            throw std::runtime_error("Client already has an authentication token");
-        }
+        // if (does_key_exist(app_db, AUTH_TOKEN_KEY_SCHEMA, auth_key)) { // Check client doesn't already have an authentication token
+        //     throw std::runtime_error("Client already has an authentication token");
+        // }
         json client_key = build_client_key(name);
         json val;
         check_successful(app_db->get(CLIENT_KEY_SCHEMA, client_key, val));

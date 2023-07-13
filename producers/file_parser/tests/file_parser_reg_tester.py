@@ -47,9 +47,10 @@ args = parser.parse_args()
 if (args.file_name is not None and args.category is None) or (args.file_name is None and args.category is not None):
     print('Must provide both file name and category or neither')
 
+process = None
 try:
 # Run the service
-    if len(args.file_name) == 0 : # Don't run the service if a specific test is being checked
+    if args.file_name == None : # Don't run the service if a specific test is being checked
         command = '/data-buddy/service/build/data-buddy-exe'
         process = subprocess.Popen(command, shell=True)
         time.sleep(0.5)
@@ -67,7 +68,7 @@ try:
         print('[TEST]', file)
         rows = []
         # Read in the csv file
-        with open(file[0], newline='') as csvfile:
+        with open(file, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 rows.append(row)
@@ -80,27 +81,28 @@ try:
         check_success(b.create_client(c))
         check_success(c.create_category(
             category,
-            PredefinedObjectsJSON['user_schemas'][category]['key_schema'],
-            PredefinedObjectsJSON['user_schemas'][category]['value_schema']
+            PredefinedObjectsJSON()['user_schemas'][category]['key_schema'],
+            PredefinedObjectsJSON()['user_schemas'][category]['value_schema']
         ))
 
         # Fail to write data since file_parser doesn't have permission
-        status = os.system(f'python3 {script_path}../file_parser.py tests/{file} {category}')
+        run_file_parser_cmd = f'python3 {parent_directory}/../file_parser.py {parent_directory}/../tests/{file} {category}'
+        status = os.system(run_file_parser_cmd)
         if os.WEXITSTATUS(status) == 0:
-            raise Exception('File parser failed')
+            raise Exception('File parser succeeded when it should have failed')
 
         # Grant permission
         check_success(c.add_client_to_category(category, 'file_parser'))
 
         # Successfully write data
-        status = os.system(f'python3 {script_path}../file_parser.py tests/{file} {category}')
+        status = os.system(run_file_parser_cmd)
         if os.WEXITSTATUS(status) != 0:
             raise Exception('File parser failed')
         
         # Check the database to make sure data was written
-        obj = PredefinedObjectsJSON['user_schemas'][category]['key_schema']['properties'] 
+        obj = PredefinedObjectsJSON()['user_schemas'][category]['key_schema']['properties'] 
         key = {}
-        for property in obj.values() :
+        for property in obj.keys() :
             if property == 'category' :
                 key[property] = category
             elif obj[property]['type'] == 'string' :
@@ -109,7 +111,9 @@ try:
                 raise Exception('Unsupported type')
         res = c.get_range(category, key)
         check_success(res)
-        assert(len(res['data']) != len(rows))
+        parsed = json.loads(res.json()['values'])
+        assert(len(parsed) == len(rows)-1)
+        print("We have indeed asserted that the length is grand")
         
 except AssertionError as error:
     traceback.print_exc()

@@ -77,7 +77,9 @@
                             "auto_and_transport",
                             "fees_and_charges",
                             "business_services",
-                            "taxes"
+                            "taxes",
+                            "na",
+                            "unknown"
                         ]
                     },
                     "transaction_subtype" : {
@@ -85,19 +87,107 @@
                         "description" : "Subcategory of the transaction based on Intuit Mint category system"
                     }
                 },
-                "required" : ["name", "time", "amount", "direction", "account", "source", "description", "transaction_type"],
+                "required" : ["name", "time", "amount", "direction", "account", "source", "description", "transaction_type", "transaction_subtype"],
                 "oneOf" : [
                     {
-                        "if" : { "properties" : { "transaction_type" : { "const" : "income" }}},
-                        "then" : { "properties" : { "transaction_subtype" : { "enum" : ["paycheck", "investment", "returned_purchase", "bonus", "interest_income", "remimbursement", "rental_income"]}}}
+                        "properties" : { "transaction_type" : { "enum" : ["income"] },
+                                         "transaction_subtype" : { "enum" : ["unknown", "na", "paycheck", "investment", "returned_purchase", "bonus", "interest_income", "remimbursement", "rental_income"]}
+                        }
                     },
                     {
-                        "if" : { "properties" : { "transaction_type" : { "const" : "miscellaneous" }}},
-                        "then" : { "properties" : {"transaction_subtype" : { "enum" : ["cash_and_atm", "check"]}}}
+                        "properties" : { "transaction_type" : { "enum" : ["miscellaneous"]},
+                                        "transaction_subtype" : {"enum" : ["unknown", "na", "cash_and_atm", "check"]}
+
+                        }
                     },
                     {
-                        "if" : { "properties" : { "transaction_type" : { "const" : "entertainment" }}},
-                        "then" : { "properties" : { "transaction_subtype" : { "enum" : ["arts", "music", "movies_and_dvds", "newspapers_and_magazines"]}}}
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["entertainment"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "atrs", "music", "movies_and_dvds", "newspaper_and_magazines"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["education"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "tuition", "student_loan", "boods_and_supplies"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["shopping"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "clothing", "electronics_and_software", "hobbies", "sporting_goods"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["personal_care"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "laundry", "hair", "spa_and_massage"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["health_and_fitness"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "dentist", "doctor", "eye_care", "pharmacy", "health_insurance", "gym", "sports"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["kids"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "activities", "allowance", "baby_supplies", "babysitter_and_daycare", "child_support", "toys"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["food_and_dining"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "groceries", "coffee_shops", "fast_food", "resaurants", "alcohol"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["gifts_and_donations"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "gifts", "charity"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["investments"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "deposit", "withdrawa", "dividends_and_cap_gains", "buy", "sell"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["bills_and_utilities"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "television", "home_phone", "internet", "mobile_phone", "utilities"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["auto_and_transport"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "gas_and_fuel", "parking", "service_and_auto_parts", "auto_payment", "auto_insurance"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["fees_and_charges"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "service_fee", "late_fee", "finance_charge", "atm_fee", "bank_fee", "commissions"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["business_services"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "advertising", "office_supplies", "printing", "shipping", "legal"]}
+                        }
+                    },
+                    {
+                        "properties" : {
+                            "transaction_type" : {"enum" : ["taxes"]},
+                            "transaction_subtype" : {"enum" : ["unknown", "na", "federal_tax", "state_tax", "local_tax", "sales_tax", "property_tax"]}
+                        }
+                    },
+                    {
+                        "properties" : { "transaction_type" : { "enum" : ["unknown"] },
+                                         "transaction_subtype" : { "enum" : ["unknown"]}
+                        }
                     }
                 ]
             },

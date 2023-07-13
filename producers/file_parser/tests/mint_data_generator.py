@@ -17,12 +17,6 @@ lines = [["Date", "Description", "Original Description", "Amount", "Transaction 
 known_types = [
     "Category", "Ride Share", "Transfer", "Shopping", "Restaurants", "Air Travel", "Travel", "Credit Card Payment", "Groceries", "Investments", "Dividend & Cap Gains", "Income", "Hotel", "Utilities", "Mortgage & Rent", "Parking", "Charity", "Shipping", "Entertainment", "Vacation", "Clothing", "Home Supplies", "Movies & DVDs", "Gas & Fuel", "Sporting Goods", "Fees & Charges", "Legal", "Fast Food", "Uncategorized", "Paycheck", "Federal Tax", "State Tax", "Taxes", "Internet", "Education", "Buy", "Bank Fee", "ATM Fee", "Public Transportation", "Books", "Financial", "Sports", "Electronics & Software", "Home Improvement", "Food & Dining", "Service Fee", "Coffee Shops", "Check", "Gym", "Deposit", "Hobbies", "Amusement", "Auto & Transport", "Food Delivery", "Bills & Utilities", "Alcohol & Bars", "Pharmacy", "Doctor", "Sell", "Trade Commissions", "Misc Expenses", "Service & Parts", "Finance Charge", "Interest Income", "Laundry", "Gift", "Cash & ATM", "Tuition", "Books & Supplies", "Gifts & Donations", "Lawn & Garden", "Music", "Personal Care", "Transfer for Cash Spending"
 ]
-for type in known_types :
-    type = format_mint_category(type)
-types = set(known_types)
-types.update(get_finance_types())
-types.update(get_finance_subtypes())
-types = list(types)
 
 # Set of accounts
 accounts = ["Checking", "Savings", "Credit Card", "Investment", "Cash"]
@@ -35,7 +29,7 @@ for i in range(1000) : # Generate 1000 transactions
     original_description = description
     amount = random.randint(1, 10000) / 100
     direction = random.choice(directions)
-    category = random.choice(types)
+    category = random.choice(known_types)
     account = random.choice(accounts)
     labels = ""
     notes = ""

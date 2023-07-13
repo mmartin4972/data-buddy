@@ -10,3 +10,6 @@ service/tests/__pycache__
 **/node_modules
 **/dist
 /tests
+.vscode/
+__pycache__/
+

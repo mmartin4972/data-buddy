@@ -76,31 +76,31 @@ static json CLIENT_VALUE_SCHEMA = R"(
         }
     )"_json;
 
-// static json CATEGORY_KEY_SCHEMA = R"(
-//         {
-//             "type": "object",
-//             "properties": {
-//                 "category": { "type": "string", "enum": ["category"] },
-//                 "name": { "type": "string" }
-//             },
-//             "required": ["category", "name"]
-//         }
-//     )"_json;
+static json CATEGORY_KEY_SCHEMA = R"(
+        {
+            "type": "object",
+            "properties": {
+                "category": { "type": "string", "enum": ["category"] },
+                "name": { "type": "string" }
+            },
+            "required": ["category", "name"]
+        }
+    )"_json;
 
-// static json CATEGORY_VALUE_SCHEMA = R"(
-//         {
-//             "type": "object",
-//             "properties": {
-//                 "name": { "type": "string" },
-//                 "key_schema": { "type": "object" },
-//                 "value_schema": { "type": "object" },
-//                 "clients": { "type": "array",
-//                     "items": { "type": "string" }
-//                 }
-//             },
-//             "required": ["name", "key_schema", "value_schema", "clients"]
-//         }
-//     )"_json;
+static json CATEGORY_VALUE_SCHEMA = R"(
+        {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "key_schema": { "type": "object" },
+                "value_schema": { "type": "object" },
+                "clients": { "type": "array",
+                    "items": { "type": "string" }
+                }
+            },
+            "required": ["name", "key_schema", "value_schema", "clients"]
+        }
+    )"_json;
 
 static json AUTH_TOKEN_KEY_SCHEMA = R"(
         {

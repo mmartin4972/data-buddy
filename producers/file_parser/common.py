@@ -14,7 +14,7 @@ class IFileParser(ABC):
         pass
 
     @abstractmethod
-    def is_type(self, file_path, category) -> bool:
+    def is_type(self, file_path: str, category: str) -> bool:
         pass
 
     @abstractmethod
@@ -38,3 +38,6 @@ class PredefinedObjectsJSON(Singleton) :
 
     def __getitem__(self, index):
         return self.predefined_json[index]
+    
+def datetime_to_rfc_3339(dt):
+    return dt.isoformat("T") + "Z"
