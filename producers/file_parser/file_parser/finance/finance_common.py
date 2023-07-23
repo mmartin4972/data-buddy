@@ -3,8 +3,8 @@ import sys
 import os
 script_path = os.path.abspath(__file__)
 parent_directory = os.path.dirname(script_path)
-sys.path.append(os.path.join(parent_directory, '../'))
-from common import IFileParser, PredefinedObjectsJSON, datetime_to_rfc_3339
+# sys.path.append(os.path.join(parent_directory, '../'))
+from ..common import IFileParser, PredefinedObjectsJSON, datetime_to_rfc_3339
 
 def format_mint_category(mint_category) :
     mint_category = mint_category.lower()

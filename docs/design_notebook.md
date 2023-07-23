@@ -850,6 +850,28 @@ Consumer Brainstorming ideas:
 ## 7/10/23
 - Something cool to do may be to make an application which tracks the total amount of money that you give to the government including taxes form all individual purchases
 
+## 7/18/23
+- Creating a module in python
+    - Should always be structured where you have the outer pkg folder
+    - inside you have a folder that is the name of the module and in this folder you have an __init__.py and a main.py file
+    - outside this folder you have a requirements.txt which can be generated with `pip freeze` and then you have a setup.py file
+    - The setup.py should simply contain what is in service/api_libs/service_api_lib_py_pkg/setup.py
+    - If something is a module it can import stuff that is in a higher directory
+    - pkg_resources can be specified in the __init__.py file to import external files that a package may be dependent on
+    - Once your package is constructed you can install it with pip
+- Testing
+    - When testing python files pytest should be used
+    - install pytest with `pip install -U pytest`
+    - test files should have the prefix test_ followed by the file name
+    - pytest will then run the test files
+    - Ran into issues with installing the module. Can create the installable package with:
+        - `python3 setup.py install/develop`
+    - Then need to install the package with pip by going pip install -e <path to setup.py>
+
+## 7/23/23
+- I am going to leave the service_reg_tester.py file as it is. I don't feel like refactoring for pytest and since it is an integration test I'm not sure that pytest is going to be the best framework for making it work. It seems like pytest is more useful for unit testing. Going forward for all Python files I'll be sure to use pytest, however.
+- I am shelving this project for now, since I am just too busy. I'll pick it back up in 2-3 months.
+
 # Ongoing List of Things TODO
 ## Server
     - Remove the db-test endpoint and the db-get-test endpoint

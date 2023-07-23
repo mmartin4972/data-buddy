@@ -1,0 +1,5 @@
+setup.py
+service_api_lib.egg-info/PKG-INFO
+service_api_lib.egg-info/SOURCES.txt
+service_api_lib.egg-info/dependency_links.txt
+service_api_lib.egg-info/top_level.txt

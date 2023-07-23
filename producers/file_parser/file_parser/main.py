@@ -2,7 +2,7 @@ import sys
 import os
 script_path = os.path.abspath(__file__)
 parent_directory = os.path.dirname(script_path)
-sys.path.append(os.path.join(parent_directory, '../../service/api-libs'))
+# sys.path.append(os.path.join(parent_directory, '../../service/api-libs'))
 from service_api_lib import Buddy, Client, check_success
 import argparse
 from finance.mint_transactions import MintTransactionParser

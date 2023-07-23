@@ -3,6 +3,7 @@ import json
 from typing import List, Dict, Any
 import os
 import sys
+from data import predefined_json
 
 class IFileParser(ABC):
     @abstractmethod
@@ -33,8 +34,7 @@ class PredefinedObjectsJSON(Singleton) :
     def __init__(self) :
         script_path = os.path.abspath(__file__)
         parent_directory = os.path.dirname(script_path)
-        with open(os.path.join(parent_directory, '../../predefined_objects.json'), 'r') as f :
-            self.predefined_json = json.load(f)
+        self.predefined_json = predefined_json
 
     def __getitem__(self, index):
         return self.predefined_json[index]
